@@ -33,8 +33,7 @@ fun intrev10(n: int): int
 *)
 
 
-let split_string s delimiter =
-  String.split_on_char delimiter s
+
 
 let string_merge cs1 cs2 =
   let rec merge s1 s2 acc =
@@ -182,28 +181,6 @@ fun string_avoid_1324(cs: string): bool
 
 
 
-    
 
-    let intrep_add ds1 ds2 =
-      let rec add_helper ds1 ds2 carry result =
-        match (ds1, ds2) with
-        | [], [] -> if carry > 0 then string_of_int carry else ""
-        | [], _ | _, [] ->
-            let digit1 = int_of_string (String.make 1 '0') in
-            let digit2 = int_of_string (String.make 1 '0') in
-            let total = digit1 + digit2 + carry in
-            let new_carry = total / 10 in
-            let new_result = string_of_int (total mod 10) ^ result in
-            add_helper [] [] new_carry new_result
-        | hd1 :: tl1, hd2 :: tl2 ->
-            let digit1 = int_of_string (String.make 1 hd1) in
-            let digit2 = int_of_string (String.make 1 hd2) in
-            let total = digit1 + digit2 + carry in
-            let new_carry = total / 10 in
-            let new_result = string_of_int (total mod 10) ^ result in
-            add_helper tl1 tl2 new_carry new_result
-      in
-      let result = add_helper (String.to_seq ds1 |> List.of_seq |> List.rev) (String.to_seq ds2 |> List.of_seq |> List.rev) 0 "" in
-      if result = "" then "0" else result ;;
 
       
