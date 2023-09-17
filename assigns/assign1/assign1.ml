@@ -17,14 +17,27 @@ of 10, intrev10(n) is the natural number whose
 representation in base 10 reverses that of the
 number n.
 
-fun intrev10(n: int): int
+
+
+
+
 
 For instance, if n = 12345, then intrev10(n) is
 54321; if n = 10203, then intrev10(n) is 30201.
 
 Please give a TAIL-RECURSIVE implementation of
 intrev10.
+
+fun intrev10(n: int): int
+
 *)
+
+
+
+
+ 
+
+
 
 (* ****** ****** *)
 
@@ -141,3 +154,47 @@ fun string_avoid_1324(cs: string): bool
 (* ****** ****** *)
 
 (* end of [CS320-2023-Fall-assigns-assign1.ml] *)
+
+
+
+
+
+
+let intrev10 n =
+    let rec helper n reversed =
+      if n = 0 then
+        reversed
+      else
+        let last_digit = n mod 10 in
+        let new_reversed = reversed * 10 + last_digit in
+        let remaining = n / 10 in
+        helper remaining new_reversed
+    in
+    helper n 0
+
+
+
+
+    
+
+    let intrep_add ds1 ds2 =
+      let rec add_helper ds1 ds2 carry result =
+        match (ds1, ds2) with
+        | [], [] -> if carry > 0 then string_of_int carry else ""
+        | [], _ | _, [] ->
+            let digit1 = int_of_string (String.make 1 '0') in
+            let digit2 = int_of_string (String.make 1 '0') in
+            let total = digit1 + digit2 + carry in
+            let new_carry = total / 10 in
+            let new_result = string_of_int (total mod 10) ^ result in
+            add_helper [] [] new_carry new_result
+        | hd1 :: tl1, hd2 :: tl2 ->
+            let digit1 = int_of_string (String.make 1 hd1) in
+            let digit2 = int_of_string (String.make 1 hd2) in
+            let total = digit1 + digit2 + carry in
+            let new_carry = total / 10 in
+            let new_result = string_of_int (total mod 10) ^ result in
+            add_helper tl1 tl2 new_carry new_result
+      in
+      let result = add_helper (String.to_seq ds1 |> List.of_seq |> List.rev) (String.to_seq ds2 |> List.of_seq |> List.rev) 0 "" in
+      if result = "" then "0" else result
