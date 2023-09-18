@@ -51,6 +51,8 @@ let digit_of_char(ch: char): int =
     fun i -> if i <= 0 then c0 else string_get_at cs (i-1))
   
 
+    let string_tail(cs) =
+string_init(string_length(cs)-1)(fun i -> string_get_at(cs)(i+1))
 
 let string_merge cs1 cs2 =
   let rec merge s1 s2 acc =
@@ -61,14 +63,11 @@ let string_merge cs1 cs2 =
     | s1,s2->
                               
       if char_to_int (string_get_at s1 0) <= char_to_int (string_get_at s2 0)then
-      string_cons  (string_get_at s1 0) (merge (String.sub s1 1 (String.length s1 - 1)) s2 acc)
+      string_cons  (string_get_at s1 0) (merge (string_tail s1) s2 acc)
       else
-        string_cons  ( string_get_at s2 0 ) ( merge s1 (String.sub s2 1 (String.length s2 - 1)) acc)
+        string_cons  ( string_get_at s2 0 ) ( merge s1 (string_tail s2) acc)
   in
   merge cs1 cs2 "" ;;
-
-
-
 
 
 
