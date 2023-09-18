@@ -107,12 +107,12 @@ converting ds1 and ds2 to integers can cause overflow.
 *)
 
 
- #use ".assign1.ml";;
+ #use "./../assign1.ml";;
  #use "./../../../classlib/OCaml/MyOCaml.ml";;
 
 
 
-    let reverse s =
+let reverse s =
        let rec helper i =
           if i >= string_length s then "" else  string_snoc  (helper (i+1))  (string_get_at s i)
 
