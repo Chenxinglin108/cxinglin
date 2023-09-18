@@ -122,7 +122,7 @@ let reverse s =
 
 
 
-let intrep ds1 ds2 = 
+let intrep_add ds1 ds2 = 
   let result=
   let rec helper s1 s2  c =
 
