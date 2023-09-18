@@ -110,39 +110,6 @@ converting ds1 and ds2 to integers can cause overflow.
  #use ".assign1.ml";;
  #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
-let chr = Char.chr
-let ord = Char.code
-
-
-let digit_of_char(ch: char): int =
-  let () = assert(ch >= '0') in
-    let () = assert(ch <= '9') in ord(ch) - ord('0')
-
-  
-  
-    let char_of_digit (d0: int): char =
-      let () = assert(d0 >= 0) in
-        let () = assert(d0 <= 9) in 
-          chr(ord('0') + d0)
-
-  let string_get_at(cs:string)(i0:int): char = String.get cs i0
-
-  let string_init = String.init
-  let string_length = String.length 
-  let string_cons(c0: char)(cs: string): string = 
-  string_init(string_length(cs) + 1)(
-    fun i -> if i <= 0 then c0 else string_get_at cs (i-1))
-  
-    let str(c0) = String.make 1 c0
-
-    let string_tail(cs) =
-string_init(string_length(cs)-1)(fun i -> string_get_at(cs)(i+1))
-
-let string_snoc(cs: string)(c0: char): string =
-  let len = string_length(cs) in
-    string_init(len + 1)(
-      fun i -> if i < len then string_get_at (cs) (i) else c0
-    )
 
 
     let reverse s =
@@ -233,21 +200,6 @@ fun string_avoid_1324(cs: string): bool
 (* end of [CS320-2023-Fall-assigns-assign1.ml] *)
 
 
-
-
-
-
-let intrev10 n =
-    let rec helper n reversed =
-      if n = 0 then
-        reversed
-      else
-        let last_digit = n mod 10 in
-        let new_reversed = reversed * 10 + last_digit in
-        let remaining = n / 10 in
-        helper remaining new_reversed
-    in
-    helper n 0
 
 
 
