@@ -107,6 +107,8 @@ converting ds1 and ds2 to integers can cause overflow.
 *)
 
 
+ #use ".assign1.ml";;
+ #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
 let chr = Char.chr
 let ord = Char.code
