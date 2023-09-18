@@ -2,7 +2,8 @@
 
 
 
-
+#use ".assign1.ml";;
+#use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
 let chr = Char.chr
 let ord = Char.code
