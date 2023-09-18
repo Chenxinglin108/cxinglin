@@ -5,43 +5,11 @@
 #use ".assign1.ml";;
 #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
-let chr = Char.chr
-let ord = Char.code
-let digit_of_char(ch: char): int =
-  let () = assert(ch >= '0') in
-    let () = assert(ch <= '9') in ord(ch) - ord('0')
 
   
-  
-
-  let string_get_at(cs:string)(i0:int): char = String.get cs i0
-
-  let string_init = String.init
-  let string_length = String.length 
-  let string_cons(c0: char)(cs: string): string = 
-  string_init(string_length(cs) + 1)(
-    fun i -> if i <= 0 then c0 else string_get_at cs (i-1))
-  
-
-    let string_tail(cs) =
-string_init(string_length(cs)-1)(fun i -> string_get_at(cs)(i+1))
 
 
 
-let string_merge cs1 cs2 =
-  let rec merge s1 s2 acc =
-    match (s1, s2) with
-    | "", "" -> acc
-    | "", s2 -> s2
-    | s1, "" -> s1
-    | s1,s2->
-                              
-      if ord(string_get_at s1 0) <= ord (string_get_at s2 0)then
-      string_cons  (string_get_at s1 0) (merge (string_tail s1) s2 acc)
-      else
-        string_cons  ( string_get_at s2 0 ) ( merge s1 (string_tail s2) acc)
-  in
-  merge cs1 cs2 "" 
 
 
   (*let string_avoid_132 cs =
