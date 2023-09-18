@@ -33,7 +33,7 @@ fun intrev10(n: int): int
 *)
 
 #use ".assign1.ml";;
-#use "./../../../../classlib/OCaml/MyOCaml.ml";;
+#use "./../../../classlib/OCaml/MyOCaml.ml";;
 
 
 
