@@ -1,4 +1,4 @@
-#use "./../../../classlib/OCaml/MyOCaml.ml";;
+
 (* No other library imports are allowed. *)
 
 (* ************************************************ *)
@@ -10,7 +10,13 @@
    number inputs and false otherwise. *)
  
 
-
+(* ****** ****** *)
+(*
+  MyOCaml.ml is a library
+  built for CS320, Fall, 2023
+*)
+(* ****** ****** *)
+#use "./../../../classlib/OCaml/MyOCaml.ml";;
 
 let isPrime(n) =
   let test(i:int): bool = 
