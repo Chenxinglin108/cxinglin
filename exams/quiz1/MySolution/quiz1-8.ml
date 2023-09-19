@@ -17,6 +17,22 @@
 *)
 
 let sort5: int*int*int*int*int -> int*int*int*int*int =
+
+fun (a, b, c, d, e) ->
+  let swap (x, y) = if x > y then (y, x) else (x, y) in
+
+  let (a, b) = swap (a, b) in
+  let (a, c) = swap (a, c) in
+  let (a, d) = swap (a, d) in
+  let (a, e) = swap (a, e) in
+  let (b, c) = swap (b, c) in
+  let (b, d) = swap (b, d) in
+  let (b, e) = swap (b, e) in
+  let (c, d) = swap (c, d) in
+  let (c, e) = swap (c, e) in
+  let (d, e) = swap (d, e) in
+
+  (a, b, c, d, e)
   (* YOUR CODE *)
 
 
