@@ -26,6 +26,7 @@ let int_to_char n =
 
 
       let len n=
+      if n = 0 then 1 else
       let rec helper i c=
         if i =0 then c
         else  helper (i/10) (c+1)
@@ -38,6 +39,7 @@ let int_to_char n =
  
 
         let int2str n =
+          if n=0 then "0" else
           let length = len n in
           string_init length (fun i -> 
             let d = ( (help (n)  (length-i-1)) mod 10) in  int_to_char d
