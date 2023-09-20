@@ -3,6 +3,8 @@
 Assign0: Warmup!
 *)
 (* ****** ****** *)
+#use "./../assign1.ml";;
+ #use "./../../../classlib/OCaml/MyOCaml.ml";;
 
 let chr = Char.chr
 let ord = Char.code
@@ -17,9 +19,6 @@ let string_get(cs, i0) = String.get cs i0
 (* ****** ****** *)
 
 
-let rec fact(x: int): int =
-  if x > 0 then x * fact(x-1) else 1;;
-
 
 (*
 Assign0-1: 10 points
@@ -30,8 +29,6 @@ to arithmetic overflow.
 
 
 *)
-#use "./../assign1.ml";;
- #use "./../../../classlib/OCaml/MyOCaml.ml";;
 
 
 let find = 
