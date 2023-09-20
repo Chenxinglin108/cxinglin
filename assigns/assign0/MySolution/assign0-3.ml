@@ -5,20 +5,8 @@ integer to a string that represents the integer:
 fun int2str(i0: int): string
 *)
 
+#use "./../assign1.ml";;
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
-
-let chr = Char.chr
-
-let ord = Char.code
-let str(c0) = String.make 1 c0
-
-(* ****** ****** *)
-
-let string_init = String.init
-let string_length = String.length
-let string_get(cs, i0) = String.get cs i0
-
-
 
 
 let int_to_char n =
@@ -37,9 +25,6 @@ let int_to_char n =
 
 
 
-
-
-
       let len n=
       let rec helper i c=
         if i =0 then c
@@ -51,8 +36,6 @@ let int_to_char n =
        if i=0 || i<0 then n
        else help  (n/ 10)  (i-1)
  
-
-
 
         let int2str n =
           let length = len n in
