@@ -13,12 +13,12 @@ let str(c0) = String.make 1 c0
 let string_init = String.init
 let string_length = String.length
 let string_get(cs, i0) = String.get cs i0
-;;
+
 (* ****** ****** *)
 
 
 let rec fact(x: int): int =
-  if x > 0 then x * fact(x-1) else 1
+  if x > 0 then x * fact(x-1) else 1;;
 
 
 (*
