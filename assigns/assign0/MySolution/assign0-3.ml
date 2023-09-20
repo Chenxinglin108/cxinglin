@@ -5,7 +5,7 @@ integer to a string that represents the integer:
 fun int2str(i0: int): string
 *)
 
-#use "./../assign1.ml";;
+#use "./../assign0.ml";;
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
 
 
