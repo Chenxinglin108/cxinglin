@@ -33,7 +33,7 @@ to arithmetic overflow.
 
 
 
-let find = 
+let myans = 
   let rec helper h  =
     match fact h with 
     | 0 -> h
