@@ -6,7 +6,7 @@ fun int2str(i0: int): string
 *)
 
 #use "./../assign0.ml";;
-#use "./../../../classlib/OCaml/MyOCaml.ml";;
+
 
 
 let int_to_char n =
