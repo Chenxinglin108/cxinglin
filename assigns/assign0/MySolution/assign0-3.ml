@@ -8,8 +8,18 @@ fun int2str(i0: int): string
 #use "./../assign0.ml";;
 
 
+let chr = Char.chr
+let ord = Char.code
+let str(c0) = String.make 1 c0
+
+(* ****** ****** *)
+
+let string_init = String.init
+let string_length = String.length
+let string_get(cs, i0) = String.get cs i0
 
 let int_to_char n =
+ 
   if n = 0 then '0'
   else if n = 1 then '1'
   else if n = 2 then '2'
@@ -20,9 +30,6 @@ let int_to_char n =
   else if n = 7 then '7'
   else if n = 8 then '8'
   else  '9'
-
-
-
 
       let len n=
       if n = 0 then 1 else
@@ -37,7 +44,7 @@ let int_to_char n =
        else help  (n/ 10)  (i-1)
  
 
-        let int2str n =
+        let int1 n = 
           if n=0 then "0" else
           let length = len n in
           string_init length (fun i -> 
@@ -45,5 +52,18 @@ let int_to_char n =
           )
 
 
+let int2str n =
+  if n<0 then c ("-") (int1 (n* (-1))) else
 
+int1 n
         
+  let c (str1:string) (str2:string) : string =
+    let length1 = string_length str1 in
+    let length2 = string_length  str2 in
+    let combined_length = length1 + length2 in
+    let combined_string = string_init combined_length (fun i ->
+      if i < length1 then
+        string_get (str1, i)
+      else
+        string_get (str2, (i - length1))
+    ) in combined_string

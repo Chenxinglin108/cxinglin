@@ -56,3 +56,14 @@ let rec helper acc c =
 
 
 
+  let combine_strings str1 str2 =
+    let length1 = String.length str1 in
+    let length2 = String.length str2 in
+    let combined_length = length1 + length2 in
+    let combined_string = String.init combined_length (fun i ->
+      if i < length1 then
+        String.get str1 i
+      else
+        String.get str2 (i - length1)
+    ) in
+    combined_string
