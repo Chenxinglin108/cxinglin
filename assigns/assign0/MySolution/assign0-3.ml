@@ -8,15 +8,7 @@ fun int2str(i0: int): string
 #use "./../assign0.ml";;
 
 
-let chr = Char.chr
-let ord = Char.code
-let str(c0) = String.make 1 c0
 
-(* ****** ****** *)
-
-let string_init = String.init
-let string_length = String.length
-let string_get(cs, i0) = String.get cs i0
 
 let int_to_char n =
  
@@ -54,7 +46,6 @@ let int_to_char n =
 
 let int2str n =
   if n<0 then c ("-") (int1 (n* (-1))) else
-
 int1 n
         
   let c (str1:string) (str2:string) : string =
