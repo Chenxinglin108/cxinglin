@@ -10,18 +10,17 @@ fun int2str(i0: int): string
 
 
 let int_to_char n =
-  match n with
-  | 0-> '0'
-  | 1 -> '1'
-  | 2 -> '2'
-  | 3 -> '3'
-  | 4 -> '4'
-  | 5 -> '5'
-  | 6 -> '6'
-  | 7 -> '7'
-  | 8 -> '8'
-  | 9 -> '9'
-  | _ -> raise (Invalid_argument "Input must be in the range 0 to 9")
+  if n = 0 then '0'
+  else if n = 1 then '1'
+  else if n = 2 then '2'
+  else if n = 3 then '3'
+  else if n = 4 then '4'
+  else if n = 5 then '5'
+  else if n = 6 then '6'
+  else if n = 7 then '7'
+  else if n = 8 then '8'
+  else  '9'
+
 
 
 
