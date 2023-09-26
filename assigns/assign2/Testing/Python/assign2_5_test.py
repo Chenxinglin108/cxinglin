@@ -22,6 +22,7 @@ def fwork1(work):
         work(i)
 ####################################################
 for i, x in enumerate(fnlist_reverse(fnlist_make_fwork(fwork1))):
+    print(i,x)
     assert(i == 10 - 1 - x)
 ####################################################
 print("Assign2-5-test passed!")

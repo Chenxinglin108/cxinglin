@@ -145,7 +145,13 @@ def fnlist_make_fwork(fwork):
         res = fnlist_cons(x0, res)
 
     fwork(work)
-    return res
+
+    # Reverse the fnlist before returning
+    reversed_res = fnlist_nil()
+    for x in res:
+        reversed_res = fnlist_cons(x, reversed_res)
+
+    return reversed_res
 
 
 
