@@ -81,7 +81,7 @@ from assign2_5 import *
 
 ######################################################
 
-def fnlist_rmake_fwork(fwork):
+def fnlist_make_fwork(fwork):
     res = []
     fwork(lambda x: res.append(x))
     return res
