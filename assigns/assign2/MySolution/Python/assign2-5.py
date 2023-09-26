@@ -91,9 +91,5 @@ def fwork1(work):
 for i, x in enumerate(fnlist_reverse(fnlist_make_fwork(fwork1))):
     assert(i == 10 - 1 - x)
 
-def list_rmake_fwork(fwork):
-    res = []
-    fwork(lambda x: res.append(x))
-    return res
 
 

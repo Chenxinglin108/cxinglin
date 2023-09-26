@@ -77,7 +77,17 @@ sys.path.append("./../../../../classlib/Python")
 ####################################################
 from MyPython import *
 from assign2_5 import *
+
+
 ######################################################
+
+def list_rmake_fwork(fwork):
+    res = []
+    fwork(lambda x: res.append(x))
+    return res
+
+
+
 assert(fnlist_make_fwork(lambda work: work(0)).cons1 == 0)
 assert(fnlist_make_fwork(lambda work: work(1)).cons1 == 1)
 assert(fnlist_make_fwork(lambda work: work(2)).cons1 == 2)
@@ -90,10 +100,5 @@ def fwork1(work):
 ####################################################
 for i, x in enumerate(fnlist_reverse(fnlist_make_fwork(fwork1))):
     assert(i == 10 - 1 - x)
-
-def list_rmake_fwork(fwork):
-    res = []
-    fwork(lambda x: res.append(x))
-    return res
 
 
