@@ -81,7 +81,7 @@ from assign2_5 import *
 
 ######################################################
 
-def list_rmake_fwork(fwork):
+def flist_rmake_fwork(fwork):
     res = []
     fwork(lambda x: res.append(x))
     return res
