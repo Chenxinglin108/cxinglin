@@ -19,7 +19,7 @@ the meaning of mylist.
 *)
 
 (* ****** ****** *)
-
+ 
 let rec
 mylist_foreach
 (xs: 'a mylist)
@@ -68,17 +68,19 @@ mylist_subscript_exn
 
 let rec mylist_get_at (xs: 'a mylist) (i0: int): 'a =
   match (xs, i0) with
-  | (MyNil, _) -> mylist_subscript_exn ()  (* Empty list, raise MySubscript *)
+    (* Empty list, raise MySubscript *)
   | (_, n) when n < 0 -> mylist_subscript_exn ()  (* Negative index, raise MySubscript *)
   | (MyCons(x1, _), 0) -> x1  (* Found the element at the specified position *)
   | (MySnoc(_, x1), 0) -> x1
   | (MyCons(_, xs'), _) -> mylist_get_at xs' (i0 - 1)  (* Recursively search for the element *)
   | (MySnoc(xs', _), _) -> mylist_get_at xs' (i0 - 1)
-  | (MyReverse(xs'), _) -> mylist_get_at xs' (i0 - 1)
+  | (MyReverse(xs'), _) -> mylist_get_at (reverse_mylist(xs')) i0
   | (MyAppend2(xs1, xs2), _) ->
     let len_xs1 = mylist_length xs1 in
     if i0 < len_xs1 then mylist_get_at xs1 i0
     else mylist_get_at xs2 (i0 - len_xs1)
+
+  | (MyNil, _) -> mylist_subscript_exn ()
 (*
 //
 Assign2-2: 10 points
@@ -95,3 +97,78 @@ let rec
 mylist_get_at(xs: 'a mylist)(i0: int): 'a = ...
 //
 *)
+
+let rec reverse_mylist (xs: 'a mylist): 'a mylist =
+  let rec reverse_helper acc = function
+    | MyNil -> acc
+    | MyCons (x, rest) -> reverse_helper (MySnoc (acc, x)) rest
+    | MySnoc (rest, x) -> reverse_helper (MyCons (x, acc)) rest
+    | MyReverse ys -> reverse_helper acc ys
+    | MyAppend2 (ys1, ys2) -> reverse_helper (MyAppend2 (reverse_helper MyNil ys2, reverse_helper MyNil ys1)) MyNil
+  in
+  reverse_helper MyNil xs
+
+type
+('xs, 'x0) foreach = 'xs -> ('x0 -> unit) -> unit
+
+type
+('xs, 'x0) rforeach = 'xs -> ('x0 -> unit) -> unit
+
+type
+('xs, 'x0) iforeach = 'xs -> (int -> 'x0 -> unit) -> unit
+
+type
+('xs, 'x0, 'r0) foldleft = 'xs -> 'r0 -> ('r0 -> 'x0 -> 'r0) -> 'r0
+
+(* ****** ****** *)
+
+(*
+//
+Assign2-3: 10 points
+//
+Please implement foldleft_to_iforeach that turns a
+foldleft-loop into a iforeach-loop:
+let
+foldleft_to_iforeach
+(foldleft: ('xs, 'x0, int) foldleft): ('xs, 'x0) iforeach = ...
+*)
+
+(* ****** ****** *)
+
+
+
+
+
+let rec
+list_foldleft
+(xs: 'a list)
+(r0: 'r0)(fopr: 'r0 -> 'a -> 'r0): 'r0 =
+match xs with
+| [] -> r0
+| (x1 :: xs) ->
+  list_foldleft(xs)(fopr(r0)(x1))(fopr)
+
+
+
+
+  
+  let
+  foldleft_to_iforeach
+  (foldleft: ('xs, 'x0, int) foldleft): ('xs, 'x0) iforeach= fun xs iwork ->
+   
+      let rec iforeach_helper i xs =
+        match xs with
+        | [] -> ()
+        | x :: rest ->
+          iwork i x ;
+          iforeach_helper (i + 1) rest
+      in
+      iforeach_helper 0 xs
+
+     
+
+
+
+
+(* ****** ****** *)
+ 
