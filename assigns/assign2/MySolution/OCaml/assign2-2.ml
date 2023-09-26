@@ -66,6 +66,16 @@ mylist_subscript_exn
 (* ****** ****** *)
 
 
+let rec reverse_mylist (xs: 'a mylist): 'a mylist =
+  let rec reverse_helper acc = function
+    | MyNil -> acc
+    | MyCons (x, rest) -> reverse_helper (MySnoc (acc, x)) rest
+    | MySnoc (rest, x) -> reverse_helper (MyCons (x, acc)) rest
+    | MyReverse ys -> reverse_helper acc ys
+    | MyAppend2 (ys1, ys2) -> reverse_helper (MyAppend2 (reverse_helper MyNil ys2, reverse_helper MyNil ys1)) MyNil
+  in
+  reverse_helper MyNil xs
+
 let rec mylist_get_at (xs: 'a mylist) (i0: int): 'a =
   match (xs, i0) with
     (* Empty list, raise MySubscript *)
@@ -98,12 +108,3 @@ mylist_get_at(xs: 'a mylist)(i0: int): 'a = ...
 //
 *)
 
-let rec reverse_mylist (xs: 'a mylist): 'a mylist =
-  let rec reverse_helper acc = function
-    | MyNil -> acc
-    | MyCons (x, rest) -> reverse_helper (MySnoc (acc, x)) rest
-    | MySnoc (rest, x) -> reverse_helper (MyCons (x, acc)) rest
-    | MyReverse ys -> reverse_helper acc ys
-    | MyAppend2 (ys1, ys2) -> reverse_helper (MyAppend2 (reverse_helper MyNil ys2, reverse_helper MyNil ys1)) MyNil
-  in
-  reverse_helper MyNil xs
