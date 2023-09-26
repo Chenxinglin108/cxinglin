@@ -19,7 +19,7 @@ string_sepjoin_list(";;")(["11";"22";"33"]) = "11;;22;;33"
 *)
 
 #use ".assign2.ml";;
-#use "./../../../classlib/OCaml/MyOCaml.ml";;
+#use "./../../../../classlib/OCaml/MyOCaml.ml";;
 let string_length = String.length
 let string_init = String.init
 
