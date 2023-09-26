@@ -81,13 +81,71 @@ from assign2_5 import *
 
 ######################################################
 
-def fnlist_make_fwork(fwork):
-    res = []
-    fwork(lambda x: res.append(x))
+
+
+
+class fnlist:
+    ctag = -1
+
+    def get_ctag(self):
+        return self.ctag
+
+    def __iter__(self):
+        return fnlist_iter(self)
+
+    def __reversed__(self):
+        return fnlist_reverse(self)
+
+
+class fnlist_iter:
+    def __iter__(self):
+        return self
+
+    def __init__(self, itms):
+        self.itms = itms
+
+    def __next__(self):
+        if self.itms.ctag == 0:
+            raise StopIteration
+        else:
+            itm1 = self.itms.cons1
+            self.itms = self.itms.cons2
+            return itm1
+
+
+class fnlist_nil(fnlist):
+    def __init__(self):
+        self.ctag = 0
+
+
+class fnlist_cons(fnlist):
+    def __init__(self, cons1, cons2):
+        self.ctag = 1
+        self.cons1 = cons1
+        self.cons2 = cons2
+
+    def get_cons1(self):
+        return self.cons1
+
+    def get_cons2(self):
+        return self.cons2
+
+
+def fnlist_sing(x0):
+    res = fnlist_nil()
+    res = fnlist_cons(x0, res)
     return res
 
 
+def fnlist_make_fwork(fwork):
+    res = fnlist_nil()
 
+    def work(x0):
+        nonlocal res
+        res = fnlist_cons(x0, res)
+
+    fwork(work)
+    return res
 
 
 
