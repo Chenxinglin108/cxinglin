@@ -6,6 +6,8 @@
 
 
 
+type board_t = int * int * int * int * int * int * int * int
+
 let is_safe board row col =
   let check_diag x y =
     let dx = abs (row - x) in
@@ -13,38 +15,40 @@ let is_safe board row col =
     dx <> dy
   in
   let rec check_rows r =
-    if r < row then
-      let c = board.(r) in
-      c <> col && check_diag r c && check_rows (r + 1)
-    else
-      true
+    match r with
+    | -1 -> true
+    | r ->
+      let c = List.nth board r in
+      c <> col && check_diag r c && check_rows (r - 1)
   in
-  check_rows 0
+  check_rows (row - 1)
+
+let init_board size =
+  let rec aux n acc =
+    if n = 0 then acc else aux (n - 1) (0 :: acc)
+  in
+  aux size []
 
 let solve_queen_puzzle size =
-  let solutions = ref [] in
-  let board = Array.make size 0 in
-
-  let rec place_queen row =
-    if row = size then
-      solutions := Array.copy board :: !solutions
+  let init = init_board size in
+  let rec place_queen board row =
+    if row = size then [board]
     else
-      for col = 0 to size - 1 do
-        if is_safe board row col then begin
-          board.(row) <- col;
-          place_queen (row + 1);
-        end
-      done
+      List.fold_left
+        (fun acc col ->
+          if is_safe board row col then
+            let new_board = List.mapi (fun i c -> if i = row then col else c) board in
+            acc @ place_queen new_board (row + 1)
+          else
+            acc
+        )
+        []
+        (List.init size (fun x -> x))
   in
+  place_queen init 0
 
-  place_queen 0;
-  !solutions
+let queen8_puzzle_solve () =
+  let size = 8 in
+  let solutions = solve_queen_puzzle size in
+  list_map solutions (fun board -> Array.of_list board) 
 
-let print_solution board =
-  Array.iter (fun col ->
-    for i = 0 to Array.length board - 1 do
-      if i = col then print_string "Q " else print_string ". ";
-    done;
-    print_newline ()
-  ) board;
-  print_newline ()
