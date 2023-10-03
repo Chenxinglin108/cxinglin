@@ -50,5 +50,9 @@ let solve_queen_puzzle size =
 let queen8_puzzle_solve () =
   let size = 8 in
   let solutions = solve_queen_puzzle size in
-  list_map solutions (fun board -> Array.of_list board) 
+  List.map (fun board -> Array.of_list board) solutions
 
+let () =
+  let solutions = queen8_puzzle_solve () in
+  Printf.printf "Number of solutions: %d\n" (List.length solutions);
+  List.iter (fun board -> Array.iter (fun col -> Printf.printf "%d " col) board; print_newline ()) solutions
