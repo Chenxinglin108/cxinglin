@@ -95,3 +95,16 @@ def mylist_rforeach(xs, work):
     elif isinstance(xs, mylist_append2):
         mylist_rforeach(xs.xs2, work)
         mylist_rforeach(xs.xs1, work)
+        
+def foreach_to_map_pylist(foreach):
+    def map_pylist(xs, fopr_func):
+        res = []
+        def work_func(x0):
+            nonlocal res
+            res.append(fopr_func(x0))
+            return None
+        foreach(xs, work_func)
+        return res
+    return map_pylist
+
+
