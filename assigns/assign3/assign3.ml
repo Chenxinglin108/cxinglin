@@ -155,3 +155,7 @@ returns a list of boards consisting of all the solutions to the puzzle.
 (* ****** ****** *)
 
 (* end of [CS320-2023-Fall-assigns-assign3.ml] *)
+
+#use ".assign3.ml";;
+#use "./../../../../classlib/OCaml/MyOCaml.ml";;
+
