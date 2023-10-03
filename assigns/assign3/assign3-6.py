@@ -19,45 +19,96 @@
 ############## end of [CS320-2023-Fall-assigns-assign3.py] ##############
 
 
-class MyList:
-    def __init__(self, head, tail):
-        self.head = head
-        self.tail = tail
+class MyNil:
+    def __repr__(self):
+        return "MyNil"
 
-    def __str__(self):
-        return str(self.head) + ", " + str(self.tail)
+class MyCons:
+    def __init__(self, x, xs):
+        self.x = x
+        self.xs = xs
 
     def __repr__(self):
-        return "MyList(" + repr(self.head) + ", " + repr(self.tail) + ")"
+        return f"MyCons({self.x}, {self.xs})"
 
-    def mylist_foldl(self, fn, initial):
-        if self.tail is None:
-            return fn(initial, self.head)
-        else:
-            return self.tail.mylist_foldl(fn, fn(initial, self.head))
+class MySnoc:
+    def __init__(self, xs, x):
+        self.xs = xs
+        self.x = x
 
-    def mylist_foldr(self, fn, initial):
-        if self.tail is None:
-            return fn(self.head, initial)
-        else:
-            return fn(self.head, self.tail.mylist_foldr(fn, initial))
+    def __repr__(self):
+        return f"MySnoc({self.xs}, {self.x})"
 
-    def mylist_map(self, fn):
-        if self.tail is None:
-            return MyList(fn(self.head), None)
-        else:
-            return MyList(fn(self.head), self.tail.mylist_map(fn))
-        
-        
-        
-        
-        
-def mylist_foreach(lst, fn):
-    if lst is not None:
-        fn(lst.head)
-        mylist_foreach(lst.tail, fn)
+class MyReverse:
+    def __init__(self, xs):
+        self.xs = xs
 
-def mylist_rforeach(lst, fn):
-    if lst is not None:
-        mylist_rforeach(lst.tail, fn)
-        fn(lst.head)
+    def __repr__(self):
+        return f"MyReverse({self.xs})"
+
+class MyAppend2:
+    def __init__(self, xs1, xs2):
+        self.xs1 = xs1
+        self.xs2 = xs2
+
+    def __repr__(self):
+        return f"MyAppend2({self.xs1}, {self.xs2})"
+
+# Example usage:
+
+# Use repr_xs0, repr_xs1, etc. as needed
+
+xs0 = MyNil()
+xs1 = MyCons(1, xs0)
+xs2 = MySnoc(xs0, 2)
+xs3 = MyAppend2(xs1, xs2)
+xs4 = MyAppend2(xs3, xs3)
+xs5 = MyReverse(xs4)
+xs6 = MyAppend2(xs5, xs5)
+xs7 = MyAppend2(xs6, xs6)
+        
+
+def mylist_foreach(xs, work):
+    if isinstance(xs, MyNil):
+        return
+    elif isinstance(xs, MyCons):
+        work(xs.x)
+        mylist_foreach(xs.xs, work)
+    elif isinstance(xs, MyReverse):
+        mylist_foreach(xs.xs, work)
+    elif isinstance(xs, MySnoc):
+        mylist_foreach(xs.xs, work)
+        work(xs.x)
+    elif isinstance(xs, MyAppend2):
+        mylist_foreach(xs.xs1, work)
+        mylist_foreach(xs.xs2, work)
+
+
+
+def mylist_rforeach(xs, work):
+    if isinstance(xs, MyNil):
+        return
+    elif isinstance(xs, MyCons):
+        mylist_rforeach(xs.xs, work)
+        work(xs.x)
+    elif isinstance(xs, MyReverse):
+        mylist_rforeach(xs.xs, work)
+    elif isinstance(xs, MySnoc):
+        work(xs.x)
+        mylist_rforeach(xs.xs, work)
+    elif isinstance(xs, MyAppend2):
+        mylist_rforeach(xs.xs2, work)
+        mylist_rforeach(xs.xs1, work)
+
+
+
+def foreach_to_map_pylist(foreach):
+    def map_pylist(xs, fopr_func):
+        res = []
+        def work_func(x0):
+            nonlocal res
+            res.append(fopr_func(x0))
+            return None
+        foreach(xs, work_func)
+        return res
+    return map_pylist
