@@ -6,7 +6,8 @@ Combinator-based programming
 //
 DUE: the 4th of October, 2023
 //
-Total: 50 points + 30 bonus points
+Total: 80 points + 30 bonus points
+(OCaml: 50+30 points)(Python: 30 points)
 //
 Except for the basic arithmetic functions
 (including those on chars), you may only use
@@ -87,8 +88,24 @@ of a subsequenc is SIGNIFICANT. For instance, [1;2]
 and [2;1] are DIFFERENT.
 //
 *)
+let list_foldleft(xs) =
+  foreach_to_foldleft(list_foreach)(xs)
 
-(* ****** ****** *)
+let list_foldright(xs) =
+  rforeach_to_foldright(list_rforeach)(xs)
+let
+list_map
+(xs: 'a list)(fopr: 'a -> 'b): 'b list =
+list_foldright(xs)([])(fun x0 r0 -> fopr(x0) :: r0)
+
+
+
+let list_subsets xs =
+
+  list_foldleft  xs [[]]  (fun acc x ->
+    acc @ list_map acc (fun subset -> x :: subset))
+     
+   
 
 (*
 Assign3-4:
