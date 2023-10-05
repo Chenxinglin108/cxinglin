@@ -10,4 +10,10 @@ Please give an implementation of list_reverse based on list_foldright
 
 (* ************************************************ *)
 
-let list_reverse(xs: 'a list): 'a list = ....
+
+#use "./../../../classlib/OCaml/MyOCaml.ml";;
+
+let list_reverse(xs: 'a list): 'a list = 
+
+list_foldleft xs [] (fun acc x -> x::acc)
+ 

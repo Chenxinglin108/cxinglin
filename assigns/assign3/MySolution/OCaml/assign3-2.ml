@@ -108,5 +108,5 @@ list_foldright(xs)([])(fun x0 r0 -> fopr(x0) :: r0)
      
     let list_subsets xs =
 
-      list_foldleft xs [[]]  (fun acc x ->
-        list_append (acc) (list_map acc (fun subset -> x :: subset)))
+      list_foldleft xs [[]]  (fun acc x ->  list_append (acc) (list_map acc (fun subset -> x :: subset)))
+       
