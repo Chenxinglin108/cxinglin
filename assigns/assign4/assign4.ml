@@ -99,25 +99,22 @@ type 'a strcon =
 type 'a stream =
 unit -> 'a strcon (* thunk *)
 
-let theNatPairs: (int*int) strcon = 
 
-  let rec pairs i j  () =
-   match (i,j) with 
-   | (0,_) ->
-      StrCons ((i, j), fun () ->
-      pairs (i + 1) (j - 1) ())
-
-    | (a,0)->
-      StrCons ((i, j), fun () ->
-        pairs (0) (a+1) ()
-      )
-
-  | (_,_) ->
+let rec theNatPairs : (int * int) stream =
+  fun () ->
+    let rec pairs i j () =
+      match (i, j) with
+      | (0, _) ->
         StrCons ((i, j), fun () ->
-        pairs (i + 1) (j - 1) ())
-  
-  in
-  StrCons ((0, 0), fun () -> pairs 0 1  () )
+          pairs (i + 1) (j - 1) ())
+      | (a, 0) ->
+        StrCons ((i, j), fun () ->
+          pairs 0 (a + 1) ())
+      | (_, _) ->
+        StrCons ((i, j), fun () ->
+          pairs (i + 1) (j - 1) ())
+    in
+    StrCons ((0, 0), fun () -> pairs 0 1 ())
 
 (* Function to take the first n elements from a stream *)
 let rec take n strm =
