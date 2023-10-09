@@ -99,9 +99,8 @@ type 'a strcon =
 type 'a stream =
 unit -> 'a strcon (* thunk *)
 
-type pair = int * int
+let theNatPairs: (int*int) strcon = 
 
-let rec enumerate_pairs () : pair strcon =
   let rec pairs i j  () =
    match (i,j) with 
    | (0,_) ->
