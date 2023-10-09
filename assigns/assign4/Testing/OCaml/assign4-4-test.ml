@@ -1,8 +1,7 @@
 (* ****** ****** *)
 #use "./../../MySolution/OCaml/assign4-4.ml";;
 (* ****** ****** *)
-let () = print_string("Assign4-4-test passed!\n")
-;;
+
 (* ****** ****** *)
 
 let perm4 =
@@ -32,6 +31,8 @@ let () =
 assert(foreach_to_length(stream_foreach)(perm5) = 120);;
 let () =
 assert(foreach_to_length(stream_foreach)(perm10) = 1*2*3*4*5*6*7*8*9*10);;
+
+let () = print_string("Assign4-4-test passed!\n")
 (* ****** ****** *)
 
 (* end of [CS320-2023-Fall-assign4-4-test.sml] *)
