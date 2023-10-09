@@ -6,7 +6,7 @@
 let remove elem lst = list_foldleft (list_reverse lst) [] (fun acc x-> if x <> elem then x :: acc else acc)
 
 
-
+let list_map(xs) = foreach_to_map_list(list_foreach)(xs)
 let rec permutations = function
   | x::[] -> [[x]]
   | l -> 
