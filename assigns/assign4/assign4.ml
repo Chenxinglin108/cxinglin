@@ -232,28 +232,46 @@ let list_permute(xs: 'a list): 'a list stream
 (* end of [CS320-2023-Fall-assigns-assign4.ml] *)
 
 
-let ( ^^ ) e ll = List.map (fun x -> e::x) ll
 
 
-let rec permut l r =  
-    match r with 
-    | [] -> [[]]
-    | [x] -> x ^^ (permut [] (List.rev l))
-    | x::t -> let s = permut (x::l) t in 
-              (x ^^ (permut [] (l@t))) @ s
 
+
+
+
+type 'a strcon =
+  | StrNil
+  | StrCons of 'a * (unit -> 'a strcon)
+
+type 'a stream = unit -> 'a strcon
       
 
-
-              let rec insert x lst =
-                match lst with
-                | [] -> [[x]]
-                | h::t -> 
-                  (x::lst) :: (List.map (fun el -> h::el) (insert x t));;
+        
+let remove elem lst = list_foldleft (list_reverse lst) [] (fun acc x-> if x <> elem then x :: acc else acc)
 
 
-                  let rec perm lst =
-                    match lst with
-                    | [] -> [lst]
-                    | h::t -> 
-                      List.flatten (List.map (insert h) (perm t));;
+
+let rec permutations = function
+  | x::[] -> [[x]]
+  | l -> 
+    list_foldleft l [] (fun acc x -> list_append acc (list_map (permutations (remove x l)) (fun p -> x::p)) ) 
+
+
+
+    let list_permute(xs: 'a list): 'a list stream= 
+
+ 
+
+    let rec helper x  = 
+
+    match x with 
+
+    | [] -> StrNil
+    | h :: t -> StrCons (h, fun()-> helper t )
+
+  in fun() -> helper (permutations xs)
+
+
+
+
+
+
