@@ -7,6 +7,18 @@
 #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
 
+type 'a strcon =
+  StrNil
+| StrCons of
+  'a * (unit -> 'a strcon)
+
+(* ****** ****** *)
+
+type 'a stream =
+unit -> 'a strcon (* thunk *)
+
+
+
 let rec theNatPairs : (int * int) stream =
   fun () ->
     let rec pairs i j () =
