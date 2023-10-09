@@ -1,6 +1,6 @@
 
 
-#use ".assign4.ml";;
+
 #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
 let remove elem lst = list_foldleft (list_reverse lst) [] (fun acc x-> if x <> elem then x :: acc else acc)
