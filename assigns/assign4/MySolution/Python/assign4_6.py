@@ -1,32 +1,39 @@
-class Strcon:
-    def __init__(self, value):
-        self.value = value
 
-class Stream:
-    def __init__(self):
-        self.current = None
 
-    def next(self):
-        if self.current is None:
-            return None
+class StrCon:
+    def __init__(self, ctag, cons1=None, cons2=None):
+        self.ctag = ctag
+        self.cons1 = cons1
+        self.cons2 = cons2
+
+StrNil = StrCon(0)
+
+def generator_of_stream(fxs):
+    while True:
+        cxs = fxs()
+        if cxs.ctag == 0:
+            break
         else:
-            result = self.current.value
-            self.current = self.current.value()
-            return result
+            fxs = cxs.cons2
+            yield cxs.cons1
+    raise StopIteration
 
 def theNatPairs():
-    def pairs(i, j):
+    def pairs(i=0, j=0):
         while True:
-            yield (i, j)
-            if i == 0:
-                i, j = i + 1, j - 1
+            if i==0 and j ==0:
+                yield StrCon(1, (i, j), lambda: next(pairs(0, 1)))
+         
+            elif i == 0:
+                yield StrCon(1, (i, j), lambda: next(pairs( i+1, j-1)))
+             
+                
             elif j == 0:
-                i, j = 0, i + 1
+                  yield StrCon(1, (i, j), lambda: next(pairs(0 , i+1)))
+     
+            
             else:
-                i, j = i + 1, j - 1
+                yield StrCon(1, (i, j), lambda: next(pairs(i +1, j - 1)))
 
-    stream = Stream()
-    stream.current = Strcon((0, 0))
-    stream.current.value = lambda: Strcon((0, 0)).value
 
-    return pairs(0, 1)
+    return generator_of_stream(lambda: next(pairs()))
