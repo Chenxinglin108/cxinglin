@@ -18,7 +18,7 @@ def generator_of_stream(fxs):
             yield cxs.cons1
     raise StopIteration
 
-def theNatPairs():
+def theNatPairs_cuubesum():
     def pairs(i=0, j=0):
         while True:
             if i==0 and j ==0:
