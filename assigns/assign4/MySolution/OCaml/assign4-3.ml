@@ -12,6 +12,7 @@ type 'a gtree =
 
 
 
+
   let rec gtree_streamize_dfs (tree: 'a gtree): 'a stream =
     fun () ->
       match tree with
@@ -30,21 +31,20 @@ type 'a gtree =
   
 
 
-let rec concat_stream s1 s2 () =
-  match s1 () with
-  | StrNil -> s2 ()
-  | StrCons (value, next) -> StrCons (value, concat_stream next s2)
-
-let rec bfs (queue: 'a gtree list): 'a stream = 
-  fun () ->
-    match queue with
-    | [] -> StrNil
-    | GTnil :: rest -> bfs rest ()
-    | GTcons (value, children) :: rest -> 
-      let current_stream = fun () -> StrCons (value, bfs (list_append children rest)) in
-      concat_stream current_stream (fun () -> StrNil) ()
-
-let gtree_streamize_bfs (tree: 'a gtree): 'a stream =
-  bfs [tree]
-
-
+        let rec concat_stream s1 s2 () =
+          match s1 () with
+          | StrNil -> s2 ()
+          | StrCons (value, next) -> StrCons (value, concat_stream next s2)
+        
+        let rec bfs (queue: 'a gtree list): 'a stream = 
+          fun () ->
+            match queue with
+            | [] -> StrNil
+            | GTnil :: rest -> bfs rest ()
+            | GTcons (value, children) :: rest -> 
+              let current_stream = fun () -> StrCons (value, bfs (list_append rest children)) in
+              concat_stream current_stream (fun () -> StrNil) ()
+        
+        let gtree_streamize_bfs (tree: 'a gtree): 'a stream =
+          bfs [tree]
+        
