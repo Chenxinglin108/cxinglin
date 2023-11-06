@@ -58,16 +58,29 @@ let parse_digit cs =
   | _ -> None
 
 
-let rec parse_num cs =
+  let reverse_int n =
+    let rec reverse_aux n acc =
+      if n = 0 then acc
+      else reverse_aux (n / 10) (acc * 10 + n mod 10)
+    in
+    reverse_aux n 0
+  let rec helper cs =
+
     match parse_digit cs with
     | Some (d, cs') ->
-
-         (match parse_num cs' with
-         | Some (n, cs'') -> Some (10 * d + n, cs'')
-         | None -> Some (d, cs'))
-
+      (match helper cs' with
+       | Some (n, cs'') -> Some (10 * n + d, cs'')  
+       | None -> Some (d, cs'))
     | None -> None
 
+
+    let rec parse_num cs = 
+      match helper cs with 
+    | Some (a,cs) -> Some (reverse_int a,cs )
+    | None-> None
+  
+  
+  
 
 
 
