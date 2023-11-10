@@ -1,5 +1,5 @@
 #use "./../../MySolution/OCaml/assign6-1.ml";;
-
+#use "./../../../../classlib/OCaml/MyOCaml.ml";;
 (* ****** ****** *)
 
 
