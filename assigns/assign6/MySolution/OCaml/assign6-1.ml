@@ -61,7 +61,7 @@ Grammar (<expr> is the start symbol)
 
 
 
-#use "./../../../classlib/OCaml/MyOCaml.ml"
+#use "./../../classlib/OCaml/MyOCaml.ml"
 
 
 
