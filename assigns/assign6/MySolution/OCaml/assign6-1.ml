@@ -63,6 +63,41 @@ Grammar (<expr> is the start symbol)
 
 #use "./../../../classlib/OCaml/MyOCaml.ml"
 
+
+
+let
+strapp
+((xs: string)
+,(ys: string)) =
+let m =
+string_length(xs) in
+let n =
+string_length(ys) in
+string_init (m + n)
+(fun i ->
+ if i < m
+ then string_get(xs, i) else string_get(ys, i-m))
+
+(* ****** ****** *)
+
+let rec
+nat2str
+(x: int): string =
+
+if x < 10
+then
+str(chr((ord('0') + x mod 10)))
+else
+strapp
+(nat2str(x / 10), str(chr((ord('0') + x mod 10))))
+(* end-of-let *)
+
+(* ****** ****** *)
+
+let rec
+int2str(x: int) =
+if x >= 0 then nat2str(x) else str('-') ^ nat2str(-x)
+
 type sexpr =
 | SInt of int
 | SAdd of sexpr list
@@ -93,10 +128,10 @@ let rec sexpr_parse (s: string) : sexpr option =
     match lst with
     | [] -> ""
     | hd :: tl ->
-     list_foldleft tl hd (fun acc x -> acc ^ sep ^ x)
+     list_foldleft tl hd (fun acc x -> string_append (string_append acc sep) x)
   
   let rec sexpr_to_string e =
     match e with
-    | SInt n -> string_of_int n
+    | SInt n -> int2str n
     | SAdd exprs -> string_append (string_append "(add " (concat " " (list_map exprs sexpr_to_string))) ")"
     | SMul exprs -> string_append (string_append "(mul " (concat " " (list_map exprs sexpr_to_string))) ")"
