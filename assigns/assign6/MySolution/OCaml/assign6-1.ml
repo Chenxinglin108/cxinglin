@@ -61,7 +61,7 @@ Grammar (<expr> is the start symbol)
 
 
 
-#use "./../../classlib/OCaml/MyOCaml.ml"
+#use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
 
 let string_get(cs, i0) = String.get cs i0
