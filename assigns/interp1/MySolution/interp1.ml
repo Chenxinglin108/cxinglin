@@ -134,8 +134,8 @@ let eval_command cmd (stack, trace) =
   | Sub, (Int a) :: (Int b) :: s -> Ok (Int (b - a) :: s, trace)
   | Mul, (Int a) :: (Int b) :: s -> Ok (Int (a * b) :: s, trace)
   | Div, (Int a) :: (Int b) :: s -> 
-      if a = 0 then Error Panic 
-      else Ok (Int (b / a) :: s, trace)
+      if b = 0 then Error Panic 
+      else Ok (Int (a / b) :: s, trace)
   | And, (Bool a) :: (Bool b) :: s -> Ok (Bool (a && b) :: s, trace)
   | Or, (Bool a) :: (Bool b) :: s -> Ok (Bool (a || b) :: s, trace)
   | Not, (Bool a) :: s -> Ok (Bool (not a) :: s, trace)
