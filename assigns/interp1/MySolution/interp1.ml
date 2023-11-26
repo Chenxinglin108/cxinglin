@@ -154,7 +154,7 @@ let eval_program commands =
   in
   match eval_commands commands ([], []) with
   | Ok (_, trace) -> Some (list_reverse trace)
-  | Error _ -> None
+  | Error _ -> Some (["Panic"])
 
 let interp program_str =
   let commands = parse_program program_str in
