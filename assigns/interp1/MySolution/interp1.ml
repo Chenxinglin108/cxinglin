@@ -153,7 +153,7 @@ let eval_program commands =
          | Error e -> Error e)
   in
   match eval_commands commands ([], []) with
-  | Ok (_, trace) -> Some (list_reverse trace)
+  | Ok (_, trace) -> Some  (trace)
   | Error _ -> Some (["Panic"])
 
 let interp program_str =
