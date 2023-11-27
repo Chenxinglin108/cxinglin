@@ -190,7 +190,7 @@ let eval_command cmd (stack, trace) =
   match cmd, stack with
   | Push v, _ -> Ok (v :: stack, trace)
   | Pop, _ :: s -> Ok (s, trace)
-  | Trace, v :: s -> Ok (s, (string_of_value v) :: trace)
+  | Trace, v :: s -> Ok (Unit :: s, (string_of_value v) :: trace)
   | Add, (Int a) :: (Int b) :: s -> Ok (Int (a + b) :: s, trace)
   | Sub, (Int a) :: (Int b) :: s -> Ok (Int (b - a) :: s, trace)
   | Mul, (Int a) :: (Int b) :: s -> Ok (Int (a * b) :: s, trace)
