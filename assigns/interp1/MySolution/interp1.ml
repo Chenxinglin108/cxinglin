@@ -121,6 +121,7 @@ let parse_value str =
     match lst with
     | [] -> []
     | "" :: t -> remove_empty_strings t
+    | "\n" :: t -> remove_empty_strings t
     | h :: t -> h :: remove_empty_strings t
 let parse_command str =
   let parts = remove_empty_strings(String.split_on_char ' ' str) in
