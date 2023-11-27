@@ -124,9 +124,10 @@ let parse_value str =
     | "\n" :: t -> remove_empty_strings t
     | h :: t -> h :: remove_empty_strings t
 let parse_command str =
-  let parts = remove_empty_strings(String.split_on_char ' ' str) in
+  let parts = remove_empty_strings(String.split_on_char ' ' (String.split_on_char '\n' str)) in
   match parts with
   | ["Push"; v] -> Push (parse_value v)
+
   | ["Pop"] -> Pop
   | ["Trace"] -> Trace
   | ["Add"] -> Add
