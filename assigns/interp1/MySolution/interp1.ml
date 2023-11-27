@@ -123,11 +123,23 @@ let parse_value str =
     | "" :: t -> remove_empty_strings t
     | "\n" :: t -> remove_empty_strings t
     | h :: t -> h :: remove_empty_strings t
+
+    let remove_newlines s =
+      let rec aux i acc =
+        if i >= String.length s then
+          acc
+        else if s.[i] = '\n' then
+          aux (i + 1) acc 
+        else
+          aux (i + 1) (acc ^ String.make 1 s.[i]) 
+      in
+      aux 0 ""
+  
+    
 let parse_command str =
-  let parts = remove_empty_strings(String.split_on_char ' ' (String.split_on_char '\n' str)) in
+  let parts = remove_empty_strings(String.split_on_char ' ' (remove_newlines(str))) in
   match parts with
   | ["Push"; v] -> Push (parse_value v)
-
   | ["Pop"] -> Pop
   | ["Trace"] -> Trace
   | ["Add"] -> Add
