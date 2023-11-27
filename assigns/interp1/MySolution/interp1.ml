@@ -204,22 +204,19 @@ let eval_command cmd (stack, trace) =
   | Gt, (Int a) :: (Int b) :: s -> Ok (Bool (a > b) :: s, trace)
   | _ -> Error Panic
 
-let eval_program commands =
-  let rec eval_commands cmds state =
-    match cmds with
-    | [] -> Ok state
-    | cmd :: cmds' ->
-        (match eval_command cmd state with
-         | Ok state' -> eval_commands cmds' state'
-         | Error e -> Error e)
-  in
-  match eval_commands commands ([], []) with
-  | Ok (_, trace) -> Some  (trace)
-  | Error _ -> Some (["Panic"])
-
-
-
-
+  let eval_program commands =
+    let rec eval_commands cmds (stack, trace) =
+      match cmds with
+      | [] -> Ok (stack, trace) 
+      | cmd :: cmds' ->
+          match eval_command cmd (stack, trace) with
+          | Ok state' -> eval_commands cmds' state' 
+          | Error _ -> Error (stack, "Panic" :: trace) 
+    in
+    match eval_commands commands ([], []) with
+    | Ok (_, trace) -> Some (trace) 
+    | Error (_, trace) -> Some (trace)  
+  
 
 
 
