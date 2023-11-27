@@ -252,7 +252,7 @@ let eval_program commands =
   let are_all_valid_commands cmd_list =
    list_foldleft cmd_list true(fun acc cmd -> acc && is_valid_command cmd) 
 
-   let interp program_str=
+   let interp program_str = if program_str == "" then Some[] else if (are_all_valid_commands(clean_string_list(String.split_on_char ';' program_str))) == true then
     let commands = parse_program program_str in
-    eval_program commands
+    eval_program commands else None
    
