@@ -192,7 +192,7 @@ let eval_command cmd (stack, trace) =
   | Pop, _ :: s -> Ok (s, trace)
   | Trace, v :: s -> Ok (Unit :: s, (string_of_value v) :: trace)
   | Add, (Int a) :: (Int b) :: s -> Ok (Int (a + b) :: s, trace)
-  | Sub, (Int a) :: (Int b) :: s -> Ok (Int (b - a) :: s, trace)
+  | Sub, (Int a) :: (Int b) :: s -> Ok (Int (a - b) :: s, trace)
   | Mul, (Int a) :: (Int b) :: s -> Ok (Int (a * b) :: s, trace)
   | Div, (Int a) :: (Int b) :: s -> 
       if b = 0 then Error Panic 
