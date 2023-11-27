@@ -117,9 +117,13 @@ let parse_value str =
   | "Unit" -> Unit
   | _ ->Int (str2int str)
 
-
+  let rec remove_empty_strings lst =
+    match lst with
+    | [] -> []
+    | "" :: t -> remove_empty_strings t
+    | h :: t -> h :: remove_empty_strings t
 let parse_command str =
-  let parts = String.split_on_char ' ' str in
+  let parts = remove_empty_strings(String.split_on_char ' ' str) in
   match parts with
   | ["Push"; v] -> Push (parse_value v)
   | ["Pop"] -> Pop
