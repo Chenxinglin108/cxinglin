@@ -129,9 +129,9 @@ let parse_value str =
         if i >= String.length s then
           acc
         else if s.[i] = '\n' then
-          aux (i + 1) (acc ^ " ") (* Replace the newline character with a space *)
+          aux (i + 1) (acc ^ " ") 
         else
-          aux (i + 1) (acc ^ String.make 1 s.[i]) (* Append the current character to the accumulator *)
+          aux (i + 1) (acc ^ String.make 1 s.[i]) 
       in
       aux 0 ""
     
