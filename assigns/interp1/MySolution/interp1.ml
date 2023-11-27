@@ -124,20 +124,22 @@ let parse_value str =
     | "\n" :: t -> remove_empty_strings t
     | h :: t -> h :: remove_empty_strings t
 
-    let remove_newlines s =
+    let replace_newlines_with_space s =
       let rec aux i acc =
         if i >= String.length s then
           acc
         else if s.[i] = '\n' then
-          aux (i + 1) acc 
+          aux (i + 1) (acc ^ " ") (* Replace the newline character with a space *)
         else
-          aux (i + 1) (acc ^ String.make 1 s.[i]) 
+          aux (i + 1) (acc ^ String.make 1 s.[i]) (* Append the current character to the accumulator *)
       in
       aux 0 ""
-  
+    
+
+    
     
 let parse_command str =
-  let parts = remove_empty_strings(String.split_on_char ' ' (remove_newlines(str))) in
+  let parts = remove_empty_strings(String.split_on_char ' ' (replace_newlines_with_space(str))) in
   match parts with
   | ["Push"; v] -> Push (parse_value v)
   | ["Pop"] -> Pop
