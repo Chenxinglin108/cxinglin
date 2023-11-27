@@ -153,7 +153,7 @@ let parse_command str =
   | ["Not"] -> Not
   | ["Lt"] -> Lt
   | ["Gt"] -> Gt
-  | _ -> raise (Failure "Invalid command")
+
 
   let list_map(xs) = foreach_to_map_list(list_foreach)(xs)
   let parse_program str =
