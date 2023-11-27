@@ -244,7 +244,7 @@ let eval_program commands =
       | _ ->
         if String.length cmd > 4 && String.sub cmd 0 4 = "Push" then
           let rest = String.trim (String.sub cmd 4 (String.length cmd - 4)) in
-          is_valid_integer rest || rest = "true" || rest = "false"
+          is_valid_integer rest || rest = "True" || rest = "False"
         else
           false
     
