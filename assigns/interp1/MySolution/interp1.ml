@@ -128,7 +128,7 @@ let parse_value str =
       let rec aux i acc =
         if i >= String.length s then
           acc
-        else if s.[i] = '\n' then
+        else if s.[i] = '\n' || s.[i] == '\t'then
           aux (i + 1) (acc ^ " ") 
         else
           aux (i + 1) (acc ^ String.make 1 s.[i]) 
