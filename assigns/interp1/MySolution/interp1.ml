@@ -118,7 +118,7 @@ let parse_value str =
   | _ ->Int (str2int str)
 
   let rec remove_empty_strings lst =
-    match lst with
+    match lst with 
     | [] -> []
     | "" :: t -> remove_empty_strings t
     | "\n" :: t -> remove_empty_strings t
