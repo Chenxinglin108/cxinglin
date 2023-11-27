@@ -241,7 +241,7 @@ let eval_command cmd (stack, trace) =
       | _ ->
         if String.length cmd > 4 && String.sub cmd 0 4 = "Push" then
           let rest = String.trim (String.sub cmd 4 (String.length cmd - 4)) in
-          is_valid_integer rest || rest = "True" || rest = "False"
+          is_valid_integer rest || rest = "True" || rest = "False" ||rest= "Unit"
         else
           false
     
