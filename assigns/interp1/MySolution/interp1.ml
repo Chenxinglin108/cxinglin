@@ -51,13 +51,13 @@ let
       helper(string_length(cs))
 
       let is_valid_integer str =
-        let str_len = String.length str in
+        let str_len = string_length str in
         if str_len = 0 then false
         else
           let rec is_digit i =
             if i >= str_len then true
-            else if i = 0 && str.[i] = '-' && str_len > 1 then is_digit (i + 1)
-            else if str.[i] >= '0' && str.[i] <= '9' then is_digit (i + 1)
+            else if i = 0 && string_get str [i] = '-' && str_len > 1 then is_digit (i + 1)
+            else if string_get str [i] >= '0' && string_get str[i] <= '9' then is_digit (i + 1)
             else false
           in
           is_digit 0
@@ -65,50 +65,6 @@ let
 
       
 
-let split_on_char delimiter str =
-  let rec aux i j =
-    if j >= string_length str then
-      if i >= j then [] else [String.sub str i (j - i)]
-    else if String.get str j = delimiter then
-      if i = j then aux (j + 1) (j + 1)
-      else String.sub str i (j - i) :: aux (j + 1) (j + 1)
-    else aux i (j + 1)
-  in
-  aux 0 0
-
-let string_get(cs, i0) = String.get cs i0
-
-
-
-
-let
-  str2int
-  (cs: string): int =
-  if string_get (cs,0) == '-' then let cs = String.sub cs 1 ((string_length cs)-1) in let result= let rec
-    helper(i0: int): int =
-        if i0 <= 0 then 0 else
-        10 * helper(i0 - 1) + 
-        ord(string_get(cs, i0-1)) - ord('0')in
-        helper(string_length(cs)) in -1 * result
-  else 
-  let rec
-  helper(i0: int): int =
-      if i0 <= 0 then 0 else
-      10 * helper(i0 - 1) + 
-      ord(string_get(cs, i0-1)) - ord('0')in
-      helper(string_length(cs))
-
-      let is_valid_integer str =
-        let str_len = String.length str in
-        if str_len = 0 then false
-        else
-          let rec is_digit i =
-            if i >= str_len then true
-            else if i = 0 && str.[i] = '-' && str_len > 1 then is_digit (i + 1)
-            else if str.[i] >= '0' && str.[i] <= '9' then is_digit (i + 1)
-            else false
-          in
-          is_digit 0
       
 let parse_value str =
   match str with
@@ -126,10 +82,10 @@ let parse_value str =
 
     let replace_newlines_with_space s =
       let rec aux i acc =
-        if i >= String.length s then
+        if i >= string_length s then
           acc
-        else if s.[i] = '\n' || s.[i] == '\t'then
-          aux (i + 1) (acc ^ " ") 
+        else if string_get_at s [i] = '\n' || string_get_at s [i] == '\t'then
+          aux (i + 1) (string_append acc " ") 
         else
           aux (i + 1) (acc ^ String.make 1 s.[i]) 
       in
