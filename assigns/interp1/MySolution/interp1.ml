@@ -95,7 +95,7 @@ let parse_value str =
     
     
 let parse_command str =
-  let parts = remove_empty_strings(String.split_on_char ' ' (replace_newlines_with_space(str))) in
+  let parts = remove_empty_strings(split_on_char ' ' (replace_newlines_with_space(str))) in
   match parts with
   | ["Push"; v] -> Push (parse_value v)
   | ["Pop"] -> Pop
@@ -114,7 +114,7 @@ let parse_command str =
   let list_map(xs) = foreach_to_map_list(list_foreach)(xs)
   let parse_program str =
     str 
-    |> String.split_on_char ';' 
+    |> split_on_char ';' 
     |> (fun lst -> list_map lst String.trim)
     |> (fun lst -> list_foldright lst [] (fun s acc -> if s <> "" then s :: acc else acc))
     |> (fun lst -> list_map lst parse_command)
@@ -215,8 +215,8 @@ let eval_command cmd (stack, trace) =
       ""->true
       | "Pop" | "Trace" | "Add" | "Sub" | "Mul" | "Div" | "And" | "Or" | "Not" | "Lt" | "Gt"  -> true
       | _ ->
-        if String.length cmd > 4 && String.sub cmd 0 4 = "Push" then
-          let rest = String.trim (String.sub cmd 4 (String.length cmd - 4)) in
+        if string_length cmd > 4 && String.sub cmd 0 4 = "Push" then
+          let rest = String.trim (String.sub cmd 4 (string_length cmd - 4)) in
           is_valid_integer rest || rest = "True" || rest = "False" ||rest= "Unit"
         else
           false
@@ -225,7 +225,7 @@ let eval_command cmd (stack, trace) =
   let are_all_valid_commands cmd_list =
    list_foldleft cmd_list true(fun acc cmd -> acc && is_valid_command cmd) 
 
-   let interp program_str = if program_str == "" then Some [] else if (are_all_valid_commands(clean_string_list(String.split_on_char ';' program_str))) == true then
+   let interp program_str = if program_str == "" then Some [] else if (are_all_valid_commands(clean_string_list(split_on_char ';' program_str))) == true then
     let commands = parse_program program_str in
     eval_program commands else None
    
