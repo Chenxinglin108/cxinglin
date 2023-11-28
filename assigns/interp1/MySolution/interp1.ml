@@ -56,8 +56,8 @@ let
         else
           let rec is_digit i =
             if i >= str_len then true
-            else if i = 0 && string_get str [i] = '-' && str_len > 1 then is_digit (i + 1)
-            else if string_get str [i] >= '0' && string_get str[i] <= '9' then is_digit (i + 1)
+            else if i = 0 && string_get_at str i = '-' && str_len > 1 then is_digit (i + 1)
+            else if string_get_at str i >= '0' && string_get_at str i <= '9' then is_digit (i + 1)
             else false
           in
           is_digit 0
@@ -84,10 +84,10 @@ let parse_value str =
       let rec aux i acc =
         if i >= string_length s then
           acc
-        else if string_get_at s [i] = '\n' || string_get_at s [i] == '\t'then
+        else if string_get_at s i = '\n' || string_get_at s i == '\t'then
           aux (i + 1) (string_append acc " ") 
         else
-          aux (i + 1) (acc ^ String.make 1 s.[i]) 
+          aux (i + 1) (string_append acc (String.make 1 (string_get_at s i))) 
       in
       aux 0 ""
     
