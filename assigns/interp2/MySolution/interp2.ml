@@ -47,7 +47,7 @@ let parse_bool =
   (keyword "False" >> pure (Bool false))
 
 
-
+  let list_map(xs) = foreach_to_map_list(list_foreach)(xs)
   let parse_unit =
   keyword "Unit" >> pure Unit
 
@@ -56,7 +56,7 @@ let parse_bool =
       satisfy (fun c -> (c >= 'a' && c <= 'z')  || (c >= '0' && c <= '9'))
     in
     many1' (fun () -> parse_char_digit) >>= fun chars ->
-    pure (Sym (String.concat "" (List.map (String.make 1) chars)))
+    pure (Sym (string_concat_list (list_map chars (String.make 1))))
   
 let parse_const =
   parse_int <|>
