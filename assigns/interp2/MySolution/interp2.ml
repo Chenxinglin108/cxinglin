@@ -227,7 +227,11 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
            | _ -> eval [] ("Panic" :: t) [] e)  (* LookupError1: Top of stack is not a symbol *)
 
 
-
+    | IfElse (c1, c2) :: p0 ->
+            (match s with
+             | Bool b :: s0 -> if b then eval s0 t (c1 @ p0) e else eval s0 t (c2 @ p0) e
+             | _ :: _ -> eval [] ("Panic" :: t) [] e  (* IfElSEERROR1: Top of stack is not a boolean *)
+             | [] -> eval [] ("Panic" :: t) [] e) 
 
 
  
