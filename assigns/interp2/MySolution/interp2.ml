@@ -30,6 +30,7 @@ type com =
   | And | Or | Not
   | Lt | Gt| Swap
   | Bind | Lookup
+  | IfElse of coms * coms
   | Fun of coms | Call | Return
 
 type coms = com list
@@ -79,9 +80,15 @@ let parse_com =
   (keyword "Gt" >> pure Gt)<|>
   (keyword "Swap" >> pure Swap) <|>
   (keyword "Bind" >> pure Bind) <|>
-  (keyword "Lookup" >> pure Lookup) 
+  (keyword "Lookup" >> pure Lookup) <|>
+  
+  (keyword "If" >> parse_coms >>= fun c1 ->
+    keyword "Else" >> parse_coms >>= fun c2 ->
+    keyword "End" >> pure (IfElse (c1, c2)))
 
 let parse_coms = many (parse_com << keyword ";")
+
+
 
 
 
@@ -116,6 +123,9 @@ let toString (c : const) : string =
   | Bool false -> "False"
   | Unit -> "Unit"
   | Sym s -> s 
+
+  let assoc_opt key lst =
+    list_foldleft lst None (fun acc (k,v) -> if k = key then Some v else acc) 
 
 
 let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
@@ -210,7 +220,7 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
     | Lookup :: p0 ->
       (match s with
         | Sym x :: s0 -> 
-             (match List.assoc_opt x e with
+             (match assoc_opt x e with
               | Some v -> eval (v :: s0) t p0 e  (* Successful lookup *)
               | None -> eval [] ("Panic" :: t) [] e)  (* LookupError3: Symbol not bound *)
            | [] -> eval [] ("Panic" :: t) [] e  (* LookupError2: Stack is empty *)
