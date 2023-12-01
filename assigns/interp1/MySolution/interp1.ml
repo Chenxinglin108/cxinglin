@@ -13,7 +13,38 @@ Notes:
 *)
 type ('a, 'e) result = Ok of 'a | Error of 'e
 type value = Int of int | Bool of bool | Unit 
-type command = Push of value | Pop | Trace | Add | Sub | Mul | Div | And | Or | Not | Lt | Gt
+type value = 
+  | Int of int 
+  | Bool of bool 
+  | Unit 
+  | Closure of string * command list * (string * value) list  (* New type for closures *)
+  | Symbol of string  (* New type for symbols *)
+
+type command = 
+  | Push of value 
+  | Pop 
+  | Trace 
+  | Add 
+  | Sub 
+  | Mul 
+  | Div 
+  | And 
+  | Or 
+  | Not 
+  | Lt 
+  | Gt 
+  | Swap  (* New command *)
+  | Bind  (* New command *)
+  | Lookup (* New command *)
+  | Fun of string * command list  (* New command for function definition *)
+  | Call  (* New command for function call *)
+  | Return  (* New command for returning from a function *)
+  | IfElse of command list * command list  (* New command for conditional execution *)
+
+
+
+
+
 
 exception Panic
 
@@ -162,24 +193,43 @@ let string_of_value = function
   | Bool b -> if b == true then "True" else "False"
   | Unit -> "Unit"
 
-let eval_command cmd (stack, trace) =
-  match cmd, stack with
-  | Push v, _ -> Ok (v :: stack, trace)
-  | Pop, _ :: s -> Ok (s, trace)
-  | Trace, v :: s -> Ok (Unit :: s, (string_of_value v) :: trace)
-  | Add, (Int a) :: (Int b) :: s -> Ok (Int (a + b) :: s, trace)
-  | Sub, (Int a) :: (Int b) :: s -> Ok (Int (a - b) :: s, trace)
-  | Mul, (Int a) :: (Int b) :: s -> Ok (Int (a * b) :: s, trace)
-  | Div, (Int a) :: (Int b) :: s -> 
-      if b = 0 then Error Panic 
-      else Ok (Int (a / b) :: s, trace)
-  | And, (Bool a) :: (Bool b) :: s -> Ok (Bool (a && b) :: s, trace)
-  | Or, (Bool a) :: (Bool b) :: s -> Ok (Bool (a || b) :: s, trace)
-  | Not, (Bool a) :: s -> Ok (Bool (not a) :: s, trace)
-  | Lt, (Int a) :: (Int b) :: s -> Ok (Bool (a < b) :: s, trace)
-  | Gt, (Int a) :: (Int b) :: s -> Ok (Bool (a > b) :: s, trace)
-  | _ -> Error Panic
-
+  let eval_command cmd (stack, env, trace) =
+    match cmd, stack with
+    | Push v, _ -> Ok (v :: stack, env, trace)
+    | Pop, _ :: s -> Ok (s, env, trace)
+    | Trace, v :: s -> Ok (Unit :: s, env, (string_of_value v) :: trace)
+    | Add, (Int a) :: (Int b) :: s -> Ok (Int (a + b) :: s, env, trace)
+    | Sub, (Int a) :: (Int b) :: s -> Ok (Int (a - b) :: s, env, trace)
+    | Mul, (Int a) :: (Int b) :: s -> Ok (Int (a * b) :: s, env, trace)
+    | Div, (Int a) :: (Int b) :: s -> 
+        if b = 0 then Error Panic 
+        else Ok (Int (a / b) :: s, env, trace)
+    | And, (Bool a) :: (Bool b) :: s -> Ok (Bool (a && b) :: s, env, trace)
+    | Or, (Bool a) :: (Bool b) :: s -> Ok (Bool (a || b) :: s, env, trace)
+    | Not, (Bool a) :: s -> Ok (Bool (not a) :: s, env, trace)
+    | Lt, (Int a) :: (Int b) :: s -> Ok (Bool (a < b) :: s, env, trace)
+    | Gt, (Int a) :: (Int b) :: s -> Ok (Bool (a > b) :: s, env, trace)
+    | Swap, a :: b :: s -> Ok (b :: a :: s, env, trace)
+    | Bind, (Symbol sym) :: v :: s -> Ok (s, (sym, v) :: env, trace)
+    | Lookup, (Symbol sym) :: s -> 
+        (match List.assoc_opt sym env with
+         | Some v -> Ok (v :: s, env, trace)
+         | None -> Error Panic)
+    | Fun(sym, cmds), s -> Ok (Closure(sym, cmds, env) :: s, env, trace)
+    | Call, (Closure(sym, cmds, closure_env)) :: s -> 
+      let new_env = (sym, args) :: closure_env in
+      (* Execute the function's commands in the new environment *)
+      (* Note: You'll need to modify this to suit your language's semantics *)
+      Ok (args, new_env, trace @ cmds)
+    | Return, v :: s -> 
+      Ok (v :: s, env, trace)
+    | IfElse(true_cmds, false_cmds), (Bool b) :: s ->
+          if b then Ok (s, env, trace @ true_cmds)
+          else Ok (s, env, trace @ false_cmds)
+      | IfElse(_, _), (Bool _) :: _ -> Error ("Panic", env, trace)  (* IfElseError1: b is not a boolean *)
+      | IfElse(_, _), [] -> Error ("Panic", env, trace)  (* IfElseError2: Stack is empty *)
+    | _ -> Error Panic
+  
   let eval_program commands =
     let rec eval_commands cmds (stack, trace) =
       match cmds with

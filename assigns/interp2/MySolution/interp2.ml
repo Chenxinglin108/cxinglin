@@ -1,295 +1,238 @@
-
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
 
+(*
 
-type value = 
-  | Int of int 
-  | Bool of bool 
+Please implement the interp function following the
+specifications described in CS320_Fall_2023_Project-1.pdf
+
+Notes:
+1. You are only allowed to use library functions defined in MyOCaml.ml
+   or ones you implement yourself.
+2. You may NOT use OCaml standard library functions directly.
+
+*)
+
+(* abstract syntax tree of interp1 *)
+
+type symbol = string
+type character = char
+
+type const =
+  | Int of int
+  | Bool of bool
   | Unit 
-  | Symbol of string 
-  | Closure of string * (string * value) list * command list
+  | Sym of symbol
+  
 
-(* Updated command type to include new commands *)
-and command = 
-  | Push of value 
-  | Pop 
-  | Trace 
-  | Add 
-  | Sub 
-  | Mul 
-  | Div 
-  | And 
-  | Or 
-  | Not 
-  | Lt 
-  | Gt 
-  | Swap 
-  | IfElse of command list * command list 
-  | Bind 
-  | Lookup of string 
-  | Fun of string * command list 
-  | Call 
-  | Return
+type com =
+  | Push of const | Pop | Trace
+  | Add | Sub | Mul | Div
+  | And | Or | Not
+  | Lt | Gt| Swap
+  | Bind | Lookup
+  | Fun of coms | Call | Return
 
-(* Exception for error scenarios *)
-exception Panic
+type coms = com list
 
 
-let split_on_char delimiter str =
-  let rec aux i j =
-    if j >= string_length str then
-      if i >= j then [] else [String.sub str i (j - i)]
-    else if String.get str j = delimiter then
-      if i = j then aux (j + 1) (j + 1)
-      else String.sub str i (j - i) :: aux (j + 1) (j + 1)
-    else aux i (j + 1)
-  in
-  aux 0 0
+let parse_nat = 
+  let* n = natural << whitespaces in pure n
 
-let string_get(cs, i0) = String.get cs i0
+let parse_int =
+  (let* n = parse_nat in pure (Int n)) <|>
+  (keyword "-" >> let* n = parse_nat in pure (Int (-n)))
+
+let parse_bool =
+  (keyword "True" >> pure (Bool true)) <|>
+  (keyword "False" >> pure (Bool false))
 
 
 
+  let parse_unit =
+  keyword "Unit" >> pure Unit
 
-let
-  str2int
-  (cs: string): int =
-  if string_get (cs,0) == '-' then let cs = String.sub cs 1 ((string_length cs)-1) in let result= let rec
-    helper(i0: int): int =
-        if i0 <= 0 then 0 else
-        10 * helper(i0 - 1) + 
-        ord(string_get(cs, i0-1)) - ord('0')in
-        helper(string_length(cs)) in -1 * result
-  else 
-  let rec
-  helper(i0: int): int =
-      if i0 <= 0 then 0 else
-      10 * helper(i0 - 1) + 
-      ord(string_get(cs, i0-1)) - ord('0')in
-      helper(string_length(cs))
+  let parse_sym =
+    let parse_char_digit =
+      satisfy (fun c -> (c >= 'a' && c <= 'z')  || (c >= '0' && c <= '9'))
+    in
+    many1' (fun () -> parse_char_digit) >>= fun chars ->
+    pure (Sym (String.concat "" (List.map (String.make 1) chars)))
+  
+let parse_const =
+  parse_int <|>
+  parse_bool <|>
+  parse_unit <|>
+  parse_sym
 
-      let is_valid_integer str =
-        let str_len = string_length str in
-        if str_len = 0 then false
-        else
-          let rec is_digit i =
-            if i >= str_len then true
-            else if i = 0 && string_get_at str i = '-' && str_len > 1 then is_digit (i + 1)
-            else if string_get_at str i >= '0' && string_get_at str i <= '9' then is_digit (i + 1)
-            else false
-          in
-          is_digit 0
+let parse_com = 
+  (keyword "Push" >> parse_const >>= fun c -> pure (Push c)) <|>
+  (keyword "Pop" >> pure Pop) <|>
+  (keyword "Trace" >> pure Trace) <|>
+  (keyword "Add" >> pure Add) <|>
+  (keyword "Sub" >> pure Sub) <|>
+  (keyword "Mul" >> pure Mul) <|>
+  (keyword "Div" >> pure Div) <|>
+  (keyword "And" >> pure And) <|>
+  (keyword "Or" >> pure Or) <|>
+  (keyword "Not" >> pure Not) <|>
+  (keyword "Lt" >> pure Lt) <|>
+  (keyword "Gt" >> pure Gt)<|>
+  (keyword "Swap" >> pure Swap) <|>
+  (keyword "Bind" >> pure Bind) <|>
+  (keyword "Lookup" >> pure Lookup) 
 
-
-      
-
-      
-let parse_value str =
-  match str with
-  | "True" -> Bool true
-  | "False" -> Bool false
-  | "Unit" -> Unit
-  | _ ->Int (str2int str)
-
-  let rec remove_empty_strings lst =
-    match lst with 
-    | [] -> []
-    | "" :: t -> remove_empty_strings t
-    | "\n" :: t -> remove_empty_strings t
-    | h :: t -> h :: remove_empty_strings t
-
-    let replace_newlines_with_space s =
-      let rec aux i acc =
-        if i >= string_length s then
-          acc
-        else if string_get_at s i = '\n' || string_get_at s i == '\t'then
-          aux (i + 1) (string_append acc " ") 
-        else
-          aux (i + 1) (string_append acc (String.make 1 (string_get_at s i))) 
-      in
-      aux 0 ""
-
-      let list_map(xs) = foreach_to_map_list(list_foreach)(xs)
-
-
-      let rec parse_command str =
-        let parts = remove_empty_strings (String.split_on_char ' ' (replace_newlines_with_space str)) in
-        match parts with
-        | ["Push"; v] -> Push (parse_value v)
-        | ["Pop"] -> Pop
-        | ["Trace"] -> Trace
-        | ["Add"] -> Add
-        | ["Sub"] -> Sub
-        | ["Mul"] -> Mul
-        | ["Div"] -> Div
-        | ["And"] -> And
-        | ["Or"] -> Or
-        | ["Not"] -> Not
-        | ["Lt"] -> Lt
-        | ["Gt"] -> Gt
-        | ["Swap"] -> Swap
-        | ["IfElse"; then_cmds; else_cmds] -> IfElse (parse_program then_cmds, parse_program else_cmds)
-        | ["Bind"] -> Bind
-        | ["Lookup"; sym] -> Lookup sym
-        | ["Fun"; name; body] -> Fun (name, parse_program body)
-        | ["Call"] -> Call
-        | ["Return"] -> Return
-        | _ -> raise (Failure "Invalid command")
-      and parse_program str =
-        str 
-        |> split_on_char ';' 
-        |> (fun lst -> list_map lst String.trim)
-        |> (fun lst -> list_foldright lst [] (fun s acc -> if s <> "" then s :: acc else acc))
-        |> (fun lst -> list_map lst parse_command)
-      
-        
-let parse_value str =
-  match str with
-  | "True" -> Bool true
-  | "False" -> Bool false
-  | "Unit" -> Unit
-  | _ when str.[0] = '\'' -> Symbol (String.sub str 1 (String.length str - 1)) (* Symbols prefixed with ' *)
-  | _ -> Int (str2int str)
+let parse_coms = many (parse_com << keyword ";")
 
 
 
+type stack = const list
+type trace = string list
+type prog = coms
+type env = (string * const) list
 
+type closure = {
+  cl_name: string;          (* Function name *)
+  cl_env: (string * const) list;  (* Closure environment *)
+  cl_body: prog;            (* Closure body *)
+}
 
+let rec str_of_nat (n : int) : string =
+  let d = n mod 10 in 
+  let n0 = n / 10 in
+  let s = str (chr (d + ord '0')) in 
+  if 0 < n0 then
+    string_append (str_of_nat n0) s
+  else s
 
+let str_of_int (n : int) : string = 
+  if n < 0 then
+    string_append "-" (str_of_nat (-n))
+  else str_of_nat n
 
-    let
-    strapp
-    ((xs: string)
-    ,(ys: string)) =
-    let m =
-    string_length(xs) in
-    let n =
-    string_length(ys) in
-    string_init (m + n)
-    (fun i ->
-     if i < m
-     then string_get(xs, i) else string_get(ys, i-m))
-    
-    (* ****** ****** *)
-    
-    let rec
-    nat2str
-    (x: int): string =
-    (*
-    let
-    _ = assert(x >= 0)
-    in(*let*)
-    *)
-    if x < 10
-    then
-    str(chr((ord('0') + x mod 10)))
-    else
-    strapp
-    (nat2str(x / 10), str(chr((ord('0') + x mod 10))))
-    (* end-of-let *)
-    
-    (* ****** ****** *)
-    
-    let rec
-    int2str(x: int) =
-    if x >= 0 then nat2str(x) else str('-') ^ nat2str(-x)   
-let string_of_value = function
-  | Int i -> int2str i
-  | Bool b -> if b == true then "True" else "False"
+let toString (c : const) : string =
+  match c with
+  | Int i -> str_of_int i
+  | Bool true -> "True"
+  | Bool false -> "False"
   | Unit -> "Unit"
+  | Sym s -> s 
 
 
-  let rec eval_command cmd stack trace env =
-    match cmd with
-    | Push v -> Ok (v :: stack, trace, env)
-    | Pop ->
-        (match stack with
-        | _ :: s -> Ok (s, trace, env)
-        | _ -> Error Panic)
-    | Trace ->
-        (match stack with
-        | v :: s -> Ok (Unit :: s, (string_of_value v) :: trace, env)
-        | _ -> Error Panic)
-    | Add ->
-        (match stack with
-        | Int a :: Int b :: s -> Ok (Int (a + b) :: s, trace, env)
-        | _ -> Error Panic)
-    | Sub ->
-        (match stack with
-        | Int a :: Int b :: s -> Ok (Int (a - b) :: s, trace, env)
-        | _ -> Error Panic)
-    | Mul ->
-        (match stack with
-        | Int a :: Int b :: s -> Ok (Int (a * b) :: s, trace, env)
-        | _ -> Error Panic)
-    | Div ->
-        (match stack with
-        | Int a :: Int b :: s ->
-            if b = 0 then Error Panic
-            else Ok (Int (a / b) :: s, trace, env)
-        | _ -> Error Panic)
-    | And ->
-        (match stack with
-        | Bool a :: Bool b :: s -> Ok (Bool (a && b) :: s, trace, env)
-        | _ -> Error Panic)
-    | Or ->
-        (match stack with
-        | Bool a :: Bool b :: s -> Ok (Bool (a || b) :: s, trace, env)
-        | _ -> Error Panic)
-    | Not ->
-        (match stack with
-        | Bool a :: s -> Ok (Bool (not a) :: s, trace, env)
-        | _ -> Error Panic)
-    | Lt ->
-        (match stack with
-        | Int a :: Int b :: s -> Ok (Bool (a < b) :: s, trace, env)
-        | _ -> Error Panic)
-    | Gt ->
-        (match stack with
-        | Int a :: Int b :: s -> Ok (Bool (a > b) :: s, trace, env)
-        | _ -> Error Panic)
-    | Swap ->
-        (match stack with
-        | a :: b :: s -> Ok (b :: a :: s, trace, env)
-        | _ -> Error Panic)
-    | IfElse (then_cmds, else_cmds) ->
-        (match stack with
-        | Bool b :: s ->
-            if b then eval_program then_cmds (s, trace, env)
-            else eval_program else_cmds (s, trace, env)
-        | _ -> Error Panic)
-    | Bind ->
-        (match stack with
-        | Symbol sym :: v :: s -> Ok (Unit :: s, trace, (sym, v) :: env)
-        | _ -> Error Panic)
-    | Lookup sym ->
-        (match List.assoc_opt sym env with
-        | Some v -> Ok (v :: stack, trace, env)
-        | None -> Error Panic)
-    | Fun (name, body) -> Ok (Closure (name, env, body) :: stack, trace, env)
-    | Call ->
-        (match stack with
-        | Closure (_, closure_env, body) :: s -> eval_program body (s, trace, closure_env)
-        | _ -> Error Panic)
-    | Return ->
-        (match stack with
-        | v :: _ -> Ok ([v], trace, env)
-        | _ -> Error Panic)
-        and eval_program cmds (stack, trace, env) =
-          let rec eval_program_helper cmds state =
-            match cmds, state with
-            | [], _ -> Ok state
-            | cmd :: cmds', (stack, trace, env) ->
-                match eval_command cmd stack trace env with
-                | Ok (stack', trace', env') ->
-                    eval_program_helper cmds' (stack', trace', env')
-                | Error e -> Error e
-          in
-          eval_program_helper cmds (stack, trace, env)
-          let interp program_str =
-            if program_str = "" then Some [] else
-              let commands = parse_program program_str in
-              match eval_program commands ([], [], []) with
-              | Ok (_, trace, _) -> Some trace
-              | Error Panic -> Some (["Panic"])
-          
+let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
+  match p with
+  (* termination state returns the trace *)
+  | [] -> t
+  | Push c :: p0 (* PushStack *) -> eval (c :: s) t p0 e
+
+  (*| Push c :: p0 -> (* PushStack *)
+    let actual_value = match c with
+      | Sym name -> (match List.assoc_opt name e with
+                      | Some value -> value
+                      | None -> c) (* If symbol not in env, push symbol itself *)
+      | _ -> c
+    in eval (actual_value :: s) t p0 e *)
+  | Pop :: p0 ->
+    (match s with
+     | _ :: s0 (* PopStack *) -> eval s0 t p0 e
+     | []      (* PopError *) -> eval [] ("Panic" :: t) [] e )
+  | Trace :: p0 ->
+    (match s with
+     | c :: s0 (* TraceStack *) -> eval (Unit :: s0) (toString c :: t) p0 e
+     | []      (* TraceError *) -> eval [] ("Panic" :: t) [] e)
+  | Add :: p0 ->
+    (match s with
+     | Int i :: Int j :: s0 (* AddStack *)  -> eval (Int (i + j) :: s0) t p0 e
+     | _ :: _ :: s0         (* AddError1 *) -> eval [] ("Panic" :: t) [] e
+     | []                   (* AddError2 *) -> eval [] ("Panic" :: t) [] e
+     | _ :: []              (* AddError3 *) -> eval [] ("Panic" :: t) [] e)
+  | Sub :: p0 ->
+    (match s with
+     | Int i :: Int j :: s0 (* SubStack *)  -> eval (Int (i - j) :: s0) t p0 e
+     | _ :: _ :: s0         (* SubError1 *) -> eval [] ("Panic" :: t) [] e
+     | []                   (* SubError2 *) -> eval [] ("Panic" :: t) [] e
+     | _ :: []              (* SubError3 *) -> eval [] ("Panic" :: t) [] e)
+  | Mul :: p0 ->
+    (match s with
+     | Int i :: Int j :: s0 (* MulStack *)  -> eval (Int (i * j) :: s0) t p0 e
+     | _ :: _ :: s0         (* MulError1 *) -> eval [] ("Panic" :: t) [] e
+     | []                   (* MulError2 *) -> eval [] ("Panic" :: t) [] e
+     | _ :: []              (* MulError3 *) -> eval [] ("Panic" :: t) [] e)
+  | Div :: p0 ->
+    (match s with
+     | Int i :: Int 0 :: s0 (* DivError0 *) -> eval [] ("Panic" :: t) [] e
+     | Int i :: Int j :: s0 (* DivStack *)  -> eval (Int (i / j) :: s0) t p0 e
+     | _ :: _ :: s0         (* DivError1 *) -> eval [] ("Panic" :: t) [] e
+     | []                   (* DivError2 *) -> eval [] ("Panic" :: t) [] e
+     | _ :: []              (* DivError3 *) -> eval [] ("Panic" :: t) [] e)
+  | And :: p0 ->
+    (match s with
+     | Bool a :: Bool b :: s0 (* AndStack *)  -> eval (Bool (a && b) :: s0) t p0 e
+     | _ :: _ :: s0           (* AndError1 *) -> eval [] ("Panic" :: t) [] e
+     | []                     (* AndError2 *) -> eval [] ("Panic" :: t) [] e
+     | _ :: []                (* AndError3 *) -> eval [] ("Panic" :: t) [] e)
+  | Or :: p0 ->
+    (match s with
+     | Bool a :: Bool b :: s0 (* OrStack *)  -> eval (Bool (a || b) :: s0) t p0 e
+     | _ :: _ :: s0           (* OrError1 *) -> eval [] ("Panic" :: t) [] e
+     | []                     (* OrError2 *) -> eval [] ("Panic" :: t) [] e
+     | _ :: []                (* OrError3 *) -> eval [] ("Panic" :: t) [] e)
+  | Not :: p0 ->
+    (match s with
+     | Bool a :: s0 (* NotStack  *) -> eval (Bool (not a) :: s0) t p0 e
+     | _ :: s0      (* NotError1 *) -> eval [] ("Panic" :: t) [] e
+     | []           (* NotError2 *) -> eval [] ("Panic" :: t) [] e)
+  | Lt :: p0 ->
+    (match s with
+     | Int i :: Int j :: s0 (* LtStack *)  -> eval (Bool (i < j) :: s0) t p0 e
+     | _ :: _ :: s0         (* LtError1 *) -> eval [] ("Panic" :: t) [] e
+     | []                   (* LtError2 *) -> eval [] ("Panic" :: t) [] e
+     | _ :: []              (* LtError3 *) -> eval [] ("Panic" :: t) [] e)
+  | Gt :: p0 ->
+    (match s with
+     | Int i :: Int j :: s0 (* GtStack *)  -> eval (Bool (i > j) :: s0) t p0 e
+     | _ :: _ :: s0         (* GtError1 *) -> eval [] ("Panic" :: t) [] e
+     | []                   (* GtError2 *) -> eval [] ("Panic" :: t) [] e
+     | _ :: []              (* GtError3 *) -> eval [] ("Panic" :: t) [] e)
+   | Swap :: p0 ->
+     (match s with
+       | i ::  j :: s0 (* GtStack *)  -> eval (j:: i :: s0) t p0 e
+     
+       | []                   (* GtError2 *) -> eval [] ("Panic" :: t) [] e
+       | _ :: []              (* GtError3 *) -> eval [] ("Panic" :: t) [] e)
+
+    | Bind :: p0 -> (* Handle Bind *)
+      (match s with
+        | Sym x :: v :: s0 -> eval s0 t p0 ((x, v) :: e)  (* Successful bind *)
+        | Sym x :: [] -> eval [] ("Panic" :: t) [] e      (* BindError3: Only one element on the stack *)
+        | [] -> eval [] ("Panic" :: t) [] e               (* BindError2: Empty stack *)
+        | _ -> eval [] ("Panic" :: t) [] e)  
+
+    | Lookup :: p0 ->
+      (match s with
+        | Sym x :: s0 -> 
+             (match List.assoc_opt x e with
+              | Some v -> eval (v :: s0) t p0 e  (* Successful lookup *)
+              | None -> eval [] ("Panic" :: t) [] e)  (* LookupError3: Symbol not bound *)
+           | [] -> eval [] ("Panic" :: t) [] e  (* LookupError2: Stack is empty *)
+           | _ -> eval [] ("Panic" :: t) [] e)  (* LookupError1: Top of stack is not a symbol *)
+
+
+
+
+
+ 
+let initial_env : env = []  (* This would contain any predefined bindings *)
+
+let interp (s : string) : string list option =
+  match string_parse (whitespaces >> parse_coms) s with
+  | Some (p, []) -> 
+    let initial_stack = [] (* Starting with an empty stack *) in
+    let initial_trace = [] (* Starting with an empty trace *) in
+    let final_trace = eval initial_stack initial_trace p initial_env in
+    Some final_trace (* Return the final trace after evaluation *)
+  | Some (_, _ :: _) -> 
+    None (* Parsing did not consume the entire input, which indicates an error *)
+  | None -> 
+    None (* Parsing failed, likely due to a syntax error in the input program *)
+      
+
