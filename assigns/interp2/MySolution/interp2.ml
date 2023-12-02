@@ -17,14 +17,21 @@ Notes:
 type symbol = string
 type character = char
 
-type const =
+type closure = {
+  cl_name: string;          (* Function name *)
+  cl_env: (string * const) list;  (* Closure environment *)
+  cl_body: prog;            (* Closure body *)
+}
+
+and const =
   | Int of int
   | Bool of bool
   | Unit 
   | Sym of symbol
+  | Closure of closure
   
 
-type com =
+and com =
   | Push of const | Pop | Trace
   | Add | Sub | Mul | Div
   | And | Or | Not
@@ -33,8 +40,9 @@ type com =
   | IfElse of coms * coms
   | Fun of coms | Call | Return
 
-type coms = com list
+and coms = com list
 
+and prog = coms
 
 let parse_nat = 
   let* n = natural << whitespaces in pure n
@@ -52,12 +60,23 @@ let parse_bool =
   let parse_unit =
   keyword "Unit" >> pure Unit
 
-  let parse_sym =
+
+  let parse_sy =
     let parse_char_digit =
       satisfy (fun c -> (c >= 'a' && c <= 'z')  || (c >= '0' && c <= '9'))
     in
     many1' (fun () -> parse_char_digit) >>= fun chars ->
     pure (Sym (string_concat_list (list_map chars (String.make 1))))
+
+
+      let parse_sym =
+        let parse_char_digit =
+          satisfy (fun c -> (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
+        in
+        many1' (fun () -> parse_char_digit) >>= fun chars ->
+        let symbol_name = String.concat "" (List.map (String.make 1) chars) in
+        pure (Sym symbol_name)  (* Wraps the string as a symbol constant *)
+      
   
 let parse_const =
   parse_int <|>
@@ -65,43 +84,50 @@ let parse_const =
   parse_unit <|>
   parse_sym
 
-let parse_com = 
-  (keyword "Push" >> parse_const >>= fun c -> pure (Push c)) <|>
-  (keyword "Pop" >> pure Pop) <|>
-  (keyword "Trace" >> pure Trace) <|>
-  (keyword "Add" >> pure Add) <|>
-  (keyword "Sub" >> pure Sub) <|>
-  (keyword "Mul" >> pure Mul) <|>
-  (keyword "Div" >> pure Div) <|>
-  (keyword "And" >> pure And) <|>
-  (keyword "Or" >> pure Or) <|>
-  (keyword "Not" >> pure Not) <|>
-  (keyword "Lt" >> pure Lt) <|>
-  (keyword "Gt" >> pure Gt)<|>
-  (keyword "Swap" >> pure Swap) <|>
-  (keyword "Bind" >> pure Bind) <|>
-  (keyword "Lookup" >> pure Lookup) <|>
+
   
-  (keyword "If" >> parse_coms >>= fun c1 ->
-    keyword "Else" >> parse_coms >>= fun c2 ->
-    keyword "End" >> pure (IfElse (c1, c2)))
+  let rec parse_com ()= 
+    (keyword "Push" >> parse_const >>= fun c -> pure (Push c)) <|>
+    (keyword "Pop" >> pure Pop) <|>
+    (keyword "Trace" >> pure Trace) <|>
+    (keyword "Add" >> pure Add) <|>
+    (keyword "Sub" >> pure Sub) <|>
+    (keyword "Mul" >> pure Mul) <|>
+    (keyword "Div" >> pure Div) <|>
+    (keyword "And" >> pure And) <|>
+    (keyword "Or" >> pure Or) <|>
+    (keyword "Not" >> pure Not) <|>
+    (keyword "Lt" >> pure Lt) <|>
+    (keyword "Gt" >> pure Gt) <|>
+    (keyword "Swap" >> pure Swap) <|>
+    (keyword "Bind" >> pure Bind) <|>
+    (keyword "Lookup" >> pure Lookup) <|>
+    (keyword "Return" >> pure Return) <|>
+    (keyword "Call" >> pure Call) <|>
+    parse_ifelsecom ()  <|>
+parse_funcom ()    
 
-let parse_coms = many (parse_com << keyword ";")
+
+and parse_ifelsecom ()=
+let* _ = keyword "If" in
+let* c1 = parse_coms() in
+let* _ = keyword "Else" in
+let* c2 = parse_coms ()in
+let* _ = keyword "End" in
+pure (IfElse (c1, c2))
+and parse_funcom () =
+  let* _ = keyword "Fun" in
+  let* body = parse_coms () in
+  let* _ = keyword "End" in
+  pure (Fun (body))
 
 
-
-
+    and parse_coms() = many (parse_com() << keyword ";")
 
 type stack = const list
 type trace = string list
-type prog = coms
-type env = (string * const) list
 
-type closure = {
-  cl_name: string;          (* Function name *)
-  cl_env: (string * const) list;  (* Closure environment *)
-  cl_body: prog;            (* Closure body *)
-}
+type env = (string * const) list
 
 let rec str_of_nat (n : int) : string =
   let d = n mod 10 in 
@@ -123,6 +149,8 @@ let toString (c : const) : string =
   | Bool false -> "False"
   | Unit -> "Unit"
   | Sym s -> s 
+  | Closure cl -> "Fun<" ^ cl.cl_name ^ ">"
+
 
   let assoc_opt key lst =
     list_foldleft lst None (fun acc (k,v) -> if k = key then Some v else acc) 
@@ -226,19 +254,55 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
            | [] -> eval [] ("Panic" :: t) [] e  (* LookupError2: Stack is empty *)
            | _ -> eval [] ("Panic" :: t) [] e)  (* LookupError1: Top of stack is not a symbol *)
 
-
-    | IfElse (c1, c2) :: p0 ->
+    |IfElse (if_coms, else_coms) :: rest ->
             (match s with
-             | Bool b :: s0 -> if b then eval s0 t (c1 @ p0) e else eval s0 t (c2 @ p0) e
-             | _ :: _ -> eval [] ("Panic" :: t) [] e  (* IfElSEERROR1: Top of stack is not a boolean *)
-             | [] -> eval [] ("Panic" :: t) [] e) 
+             | Bool b :: s' -> 
+                if b then eval s' t (if_coms @ rest) e (* Execute 'if' block *)
+                else eval s' t (else_coms @ rest) e (* Execute 'else' block *)
+             | [] -> eval [] ("Panic" :: t) [] e (* IfElseError2: Stack is empty *)
+             | _ -> eval [] ("Panic" :: t) [] e) (* IfElseError1: Top of stack is not a boolean *)
+
+      | Fun (body) :: rest -> (
+        match s with
+        | Sym x :: s' ->
+            let closure = { cl_name = x; cl_env = e; cl_body = body } in
+            eval (Closure closure :: s') t rest e  (* Push the closure onto the stack *) (* Push the closure onto the stack *)
+              | [] ->  eval [] ("Panic" :: t) [] e
+                  (* FunError2: The stack is empty *)
+              | _ -> 
+                eval [] ("Panic" :: t) [] e (* FunError1: x is not a symbol *)
+            )
 
 
- 
+      | Return :: rest -> (
+              match s with
+              | Closure { cl_name = _; cl_env = closure_env; cl_body = closure_body } :: return_val :: s' ->
+                  let new_stack = return_val :: s' in  (* The new stack has the return value on top *)
+                  eval new_stack t closure_body closure_env  (* Continue execution with the closure's body and environment *)
+              | _ -> eval [] ("Panic" :: t) [] e (* Handle error cases such as an empty stack or a stack without a closure on top *)
+            )
+
+
+            | Call :: rest -> (
+              match s with
+              | Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: arg :: s' ->
+                (* Extend the closure's environment with a binding from the function name to the closure itself *)
+                let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
+                (* Save the current continuation, which includes the rest of the program (rest) and the current environment (e) *)
+                let continuation = (rest, e) in
+                (* Place the argument on top of the stack and evaluate the closure's body with the updated environment *)
+                eval (arg :: s') t closure_body new_env
+              | [] | [_] -> 
+                eval [] ("Panic" :: t) [] e (* Immediate termination with "Panic" *)
+              | _ -> 
+                eval [] ("Panic" :: t) [] e (* Immediate termination with "Panic" *)
+            )
+            
+            
 let initial_env : env = []  (* This would contain any predefined bindings *)
 
 let interp (s : string) : string list option =
-  match string_parse (whitespaces >> parse_coms) s with
+  match string_parse (whitespaces >> parse_coms()) s with
   | Some (p, []) -> 
     let initial_stack = [] (* Starting with an empty stack *) in
     let initial_trace = [] (* Starting with an empty trace *) in
