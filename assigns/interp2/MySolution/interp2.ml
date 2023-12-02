@@ -282,18 +282,17 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
             | Call :: rest -> (
               match s with
               | Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: arg :: s' ->
-                  (* Extend the closure's environment with a binding from the function name to the closure itself *)
-                  let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
-                  (* Evaluate the closure's body with the updated environment *)
-                  let result_trace = eval (arg :: s') t closure_body new_env in
-                  (* After evaluating the closure's body, resume execution with the rest of the program *)
-                  eval s' result_trace rest e
+                (* Extend the closure's environment with a binding from the function name to the closure itself *)
+                let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
+          
+             
+                (* Place the argument on top of the stack and evaluate the closure's body with the updated environment *)
+                eval (arg :: s') t closure_body new_env
               | [] | [_] -> 
-                  eval [] ("Panic" :: t) [] e  (* Immediate termination with "Panic" *)
+                eval [] ("Panic" :: t) [] e (* Immediate termination with "Panic" *)
               | _ -> 
-                  eval [] ("Panic" :: t) [] e  (* Immediate termination with "Panic" *)
+                eval [] ("Panic" :: t) [] e (* Immediate termination with "Panic" *)
             )
-            
             
             
 let initial_env : env = []  (* This would contain any predefined bindings *)
