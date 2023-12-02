@@ -274,27 +274,24 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
             )
       | Return :: rest -> (
               match s with
-              | return_val :: Closure { cl_body = rest } :: s' ->
-                (* Resume execution with the continuation saved on the stack *)
-                eval (return_val :: s') t rest e
+              | Closure { cl_name = _; cl_env = closure_env; cl_body = closure_body } :: return_val :: s' ->
+                  let new_stack = return_val :: s' in  (* The new stack has the return value on top *)
+                  eval new_stack t closure_body closure_env  (* Continue execution with the closure's body and environment *)
               | _ -> eval [] ("Panic" :: t) [] e (* Handle error cases such as an empty stack or a stack without a closure on top *)
             )
             | Call :: rest -> (
               match s with
               | Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: arg :: s' ->
-                (* Extend the closure's environment with a binding from the function name to the closure itself *)
-                let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
-                (* Save the continuation as a special closure on the stack *)
-                let continuation_closure = Closure { cl_name = ""; cl_env = e; cl_body = rest } in
-                (* Place the argument on top of the stack and evaluate the closure's body with the updated environment *)
-                (* The continuation is saved on the stack right before the argument *)
-                eval (continuation_closure :: arg :: s') t closure_body new_env
+                  (* Extend the closure's environment with a binding from the function name to the closure itself *)
+                  let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
+                  (* Keep the closure on the stack and push the argument on top *)
+                  eval (arg :: Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: s') t closure_body new_env
               | [] | [_] -> 
-                eval [] ("Panic" :: t) [] e 
+                  eval [] ("Panic" :: t) [] e 
               | _ -> 
-                eval [] ("Panic" :: t) [] e
+                  eval [] ("Panic" :: t) [] e
             )
-            
+          
             
 let initial_env : env = []  (* This would contain any predefined bindings *)
 
