@@ -282,15 +282,18 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
             | Call :: rest -> (
               match s with
               | Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: arg :: s' ->
-                  (* Extend the closure's environment with a binding from the function name to the closure itself *)
+                  (* Update the environment with the closure, similar to mk_clo logic *)
                   let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
-                  (* Keep the closure on the stack and push the argument on top *)
-                  eval (arg :: Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: s') t closure_body new_env
+                  (* Retain the closure in the environment and execute the function body with the new environment *)
+                  eval (Closure { cl_name = f_name; cl_env = new_env; cl_body = closure_body } :: s') t closure_body ((f_name, arg) :: new_env)
               | [] | [_] -> 
                   eval [] ("Panic" :: t) [] e 
               | _ -> 
                   eval [] ("Panic" :: t) [] e
             )
+          
+
+            
           
             
 let initial_env : env = []  (* This would contain any predefined bindings *)
