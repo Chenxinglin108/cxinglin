@@ -279,23 +279,23 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
                   eval new_stack t closure_body closure_env  (* Continue execution with the closure's body and environment *)
               | _ -> eval [] ("Panic" :: t) [] e (* Handle error cases such as an empty stack or a stack without a closure on top *)
             )
+         
+
+            
             | Call :: rest -> (
               match s with
               | Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: arg :: s' ->
-                  (* Update the environment with the closure, similar to mk_clo logic *)
+                  (* Create the continuation closure with the rest of the program *)
+                  let continuation = Closure { cl_name = "cc"; cl_env = closure_env; cl_body = rest } in
+                  (* Update the environment with the closure, binding the function to itself for potential recursion *)
                   let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
-                  (* Retain the closure in the environment and execute the function body with the new environment *)
-                  (* Create a continuation closure for the rest of the program *)
-                  let continuation = Closure { cl_name = "cc"; cl_env = new_env; cl_body = rest } in
-                  eval (Closure { cl_name = f_name; cl_env = new_env; cl_body = closure_body } :: continuation :: s') t closure_body ((f_name, arg) :: new_env)
+                  (* Push the continuation and the argument onto the stack, then execute the closure's body *)
+                  eval (continuation :: arg :: s') t closure_body new_env
               | [] | [_] -> 
                   eval [] ("Panic" :: t) [] e 
               | _ -> 
                   eval [] ("Panic" :: t) [] e
             )
-          
-
-            
           
             
 let initial_env : env = []  (* This would contain any predefined bindings *)
