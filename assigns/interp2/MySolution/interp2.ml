@@ -274,9 +274,9 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
             )
       | Return :: rest -> (
               match s with
-              | Closure { cl_name = _; cl_env = closure_env; cl_body = closure_body } :: return_val :: s' ->
-                  let new_stack = return_val :: s' in  (* The new stack has the return value on top *)
-                  eval new_stack t closure_body closure_env  (* Continue execution with the closure's body and environment *)
+              | return_val :: Closure { cl_body = rest } :: s' ->
+                (* Resume execution with the continuation saved on the stack *)
+                eval (return_val :: s') t rest e
               | _ -> eval [] ("Panic" :: t) [] e (* Handle error cases such as an empty stack or a stack without a closure on top *)
             )
             | Call :: rest -> (
