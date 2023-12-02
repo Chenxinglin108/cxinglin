@@ -281,22 +281,32 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
             )
          
 
+        (* ... rest of your code ... *)
+
+| Call :: rest ->
+  begin
+    match s with
+    | Closure(func) :: arg :: rest_of_stack -> (* Correct Call *)
+      let new_env = (func.cl_name, Closure(func)) :: func.cl_env @ e in
+      (* Execute the function's body with the new environment *)
+      let result_trace = eval [arg] t func.cl_body new_env in
+      (* Continue with the rest of the program, using the new trace and stack *)
+      eval rest_of_stack result_trace rest e
+
+    | Closure(_) :: [] | [] -> (* CALLERROR2 and CALLERROR3: Stack is empty or has only one element *)
+      eval [] ("Panic" :: t) [] e
+
+    | _ -> (* CALLERROR1: Top of stack is not a closure *)
+      eval [] ("Panic" :: t) [] e
+  end
+
+(* ... rest of your code ... *)
+
+         
             
-            | Call :: rest -> (
-              match s with
-              | Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: arg :: s' ->
-                  (* Create the continuation closure with the rest of the program *)
-                  let continuation = Closure { cl_name = "cc"; cl_env = closure_env; cl_body = rest } in
-                  (* Update the environment with the closure, binding the function to itself for potential recursion *)
-                  let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
-                  (* Push the continuation and the argument onto the stack, then execute the closure's body *)
-                  eval (continuation :: arg :: s') t closure_body new_env
-              | [] | [_] -> 
-                  eval [] ("Panic" :: t) [] e 
-              | _ -> 
-                  eval [] ("Panic" :: t) [] e
-            )
-          
+     
+              
+         
             
 let initial_env : env = []  (* This would contain any predefined bindings *)
 
