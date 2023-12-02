@@ -284,14 +284,15 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
               | Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: arg :: s' ->
                 (* Extend the closure's environment with a binding from the function name to the closure itself *)
                 let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
-          
-             
+                (* Save the continuation as a special closure on the stack *)
+                let continuation_closure = Closure { cl_name = ""; cl_env = e; cl_body = rest } in
                 (* Place the argument on top of the stack and evaluate the closure's body with the updated environment *)
-                eval (arg :: s') t closure_body new_env
+                (* The continuation is saved on the stack right before the argument *)
+                eval (continuation_closure :: arg :: s') t closure_body new_env
               | [] | [_] -> 
-                eval [] ("Panic" :: t) [] e (* Immediate termination with "Panic" *)
+                eval [] ("Panic" :: t) [] e 
               | _ -> 
-                eval [] ("Panic" :: t) [] e (* Immediate termination with "Panic" *)
+                eval [] ("Panic" :: t) [] e
             )
             
             
