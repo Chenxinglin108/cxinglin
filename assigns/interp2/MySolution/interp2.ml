@@ -156,6 +156,18 @@ let toString (c : const) : string =
     list_foldleft lst None (fun acc (k,v) -> if k = key then Some v else acc) 
 
 
+    let rec mk_clo env local acc decls =
+      match decls with
+      | [] -> env
+      | ((f_name, param, body) as decl) :: rest_decls ->
+        let closure = {
+          cl_name = f_name;
+          cl_env = local;
+          cl_body = body;
+        } in
+        let new_env = (f_name, Closure closure) :: env in
+        mk_clo new_env local (decl :: acc) rest_decls
+
 let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
   match p with
   (* termination state returns the trace *)
@@ -282,24 +294,24 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
          
 
         (* ... rest of your code ... *)
-
-| Call :: rest ->
-  begin
-    match s with
-    | Closure(func) :: arg :: rest_of_stack -> (* Correct Call *)
-      let new_env = (func.cl_name, Closure(func)) :: func.cl_env @ e in
-      (* Execute the function's body with the new environment *)
-      let result_trace = eval [arg] t func.cl_body new_env in
-      (* Continue with the rest of the program, using the new trace and stack *)
-      eval rest_of_stack result_trace rest e
-
-    | Closure(_) :: [] | [] -> (* CALLERROR2 and CALLERROR3: Stack is empty or has only one element *)
-      eval [] ("Panic" :: t) [] e
-
-    | _ -> (* CALLERROR1: Top of stack is not a closure *)
-      eval [] ("Panic" :: t) [] e
-  end
-
+        | Call :: rest ->
+          begin
+            match s with
+            | Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: arg :: s' ->
+                (* Extend the closure's environment for recursive calls *)
+                let new_env = mk_clo closure_env closure_env [] [(f_name, arg, closure_body)] in
+                (* Evaluate the closure body with the new environment and argument *)
+                let closure_trace = eval [arg] t closure_body new_env in
+                (* Continue with the rest of the program *)
+                eval s' closure_trace rest e
+            | [] | [_] -> 
+                (* Handle error cases such as an empty stack or a stack with only one element *)
+                eval [] ("Panic" :: t) [] e 
+            | _ -> 
+                (* Handle case where the top of the stack is not a closure *)
+                eval [] ("Panic" :: t) [] e
+          end
+      
 (* ... rest of your code ... *)
 
          
