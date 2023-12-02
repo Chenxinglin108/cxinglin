@@ -266,14 +266,12 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
         match s with
         | Sym x :: s' ->
             let closure = { cl_name = x; cl_env = e; cl_body = body } in
-            eval (Closure closure :: s') t rest e  (* Push the closure onto the stack *) (* Push the closure onto the stack *)
+            eval (Closure closure :: s') t rest e  (* Push the closure onto the stack *) 
               | [] ->  eval [] ("Panic" :: t) [] e
                   (* FunError2: The stack is empty *)
               | _ -> 
                 eval [] ("Panic" :: t) [] e (* FunError1: x is not a symbol *)
             )
-
-
       | Return :: rest -> (
               match s with
               | Closure { cl_name = _; cl_env = closure_env; cl_body = closure_body } :: return_val :: s' ->
@@ -281,22 +279,21 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
                   eval new_stack t closure_body closure_env  (* Continue execution with the closure's body and environment *)
               | _ -> eval [] ("Panic" :: t) [] e (* Handle error cases such as an empty stack or a stack without a closure on top *)
             )
-
-
             | Call :: rest -> (
               match s with
               | Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: arg :: s' ->
-                (* Extend the closure's environment with a binding from the function name to the closure itself *)
-                let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
-                (* Save the current continuation, which includes the rest of the program (rest) and the current environment (e) *)
-                let continuation = (rest, e) in
-                (* Place the argument on top of the stack and evaluate the closure's body with the updated environment *)
-                eval (arg :: s') t closure_body new_env
+                  (* Extend the closure's environment with a binding from the function name to the closure itself *)
+                  let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
+                  (* Evaluate the closure's body with the updated environment *)
+                  let result_trace = eval (arg :: s') t closure_body new_env in
+                  (* After evaluating the closure's body, resume execution with the rest of the program *)
+                  eval s' result_trace rest e
               | [] | [_] -> 
-                eval [] ("Panic" :: t) [] e (* Immediate termination with "Panic" *)
+                  eval [] ("Panic" :: t) [] e  (* Immediate termination with "Panic" *)
               | _ -> 
-                eval [] ("Panic" :: t) [] e (* Immediate termination with "Panic" *)
+                  eval [] ("Panic" :: t) [] e  (* Immediate termination with "Panic" *)
             )
+            
             
             
 let initial_env : env = []  (* This would contain any predefined bindings *)
