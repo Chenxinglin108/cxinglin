@@ -285,7 +285,9 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
                   (* Update the environment with the closure, similar to mk_clo logic *)
                   let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
                   (* Retain the closure in the environment and execute the function body with the new environment *)
-                  eval (Closure { cl_name = f_name; cl_env = new_env; cl_body = closure_body } :: s') t closure_body ((f_name, arg) :: new_env)
+                  (* Create a continuation closure for the rest of the program *)
+                  let continuation = Closure { cl_name = "cc"; cl_env = new_env; cl_body = rest } in
+                  eval (Closure { cl_name = f_name; cl_env = new_env; cl_body = closure_body } :: continuation :: s') t closure_body ((f_name, arg) :: new_env)
               | [] | [_] -> 
                   eval [] ("Panic" :: t) [] e 
               | _ -> 
