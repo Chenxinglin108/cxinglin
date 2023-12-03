@@ -275,20 +275,20 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
               )
             
 
-              | Call :: rest -> (
-                match s with
-                | Closure (f_name, closure_env, closure_body) :: arg :: s' ->
-                    (* Update the environment for the function call *)
-                    let updated_env = (f_name, Closure (f_name, closure_env, closure_body)) :: closure_env in
-                    (* Create a continuation closure with the current environment *)
-                    let cc = ("cc", e, rest) in
-                    (* Execute the closure's body with the new environment *)
-                    let result_trace = eval [Closure cc; arg] t closure_body updated_env in
-                    (* Continue with the rest of the program *)
-                    eval s' result_trace rest e
-                | _ -> eval [] ("Panic" :: t) [] e  (* Handle errors *)
-
- )
+          
+                | Call :: rest -> (
+                  match s with
+                  | Closure (f_name, closure_env, closure_body) :: arg :: s' ->
+                      (* Create the new environment with the function mapped to its closure *)
+                      let new_env = (f_name, Closure (f_name, closure_env, closure_body)) :: closure_env in
+                      (* Create the continuation closure with the current environment and the rest of the program *)
+                      let continuation_closure = Closure ("cc", e, rest) in
+                      (* The argument 'a' becomes the top of the stack, followed by the continuation closure *)
+                      let new_stack = arg :: continuation_closure :: s' in
+                      (* Execute the closure's body with the updated environment *)
+                      eval new_stack t closure_body new_env
+                  | _ -> eval [] ("Panic" :: t) [] e  (* Handle error cases *)
+                )
 
          
             
