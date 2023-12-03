@@ -17,11 +17,7 @@ Notes:
 type symbol = string
 type character = char
 
-type closure = {
-  cl_name: string;          (* Function name *)
-  cl_env: (string * const) list;  (* Closure environment *)
-  cl_body: prog;            (* Closure body *)
-}
+type closure = string*(string*const)list*prog
 
 and const =
   | Int of int
@@ -142,32 +138,21 @@ let str_of_int (n : int) : string =
     string_append "-" (str_of_nat (-n))
   else str_of_nat n
 
-let toString (c : const) : string =
-  match c with
-  | Int i -> str_of_int i
-  | Bool true -> "True"
-  | Bool false -> "False"
-  | Unit -> "Unit"
-  | Sym s -> s 
-  | Closure cl -> "Fun<" ^ cl.cl_name ^ ">"
-
+  let toString (c : const) : string =
+    match c with
+    | Int i -> str_of_int i
+    | Bool true -> "True"
+    | Bool false -> "False"
+    | Unit -> "Unit"
+    | Sym s -> s 
+    | Closure (name, _, _) -> "Fun<" ^ name ^ ">"  (* Adjusted for the new tuple definition *)
+  
 
   let assoc_opt key lst =
     list_foldleft lst None (fun acc (k,v) -> if k = key then Some v else acc) 
 
 
-    let rec mk_clo env local acc decls =
-      match decls with
-      | [] -> env
-      | ((f_name, param, body) as decl) :: rest_decls ->
-        let closure = {
-          cl_name = f_name;
-          cl_env = local;
-          cl_body = body;
-        } in
-        let new_env = (f_name, Closure closure) :: env in
-        mk_clo new_env local (decl :: acc) rest_decls
-
+  
 let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
   match p with
   (* termination state returns the trace *)
@@ -273,46 +258,37 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
                 else eval s' t (else_coms @ rest) e (* Execute 'else' block *)
              | [] -> eval [] ("Panic" :: t) [] e (* IfElseError2: Stack is empty *)
              | _ -> eval [] ("Panic" :: t) [] e) (* IfElseError1: Top of stack is not a boolean *)
+    | Fun body :: rest ->
+              (match s with
+               | Sym x :: s' ->
+                   let closure = (x, e, body) in (* closure now matches the new structure *)
+                   eval ((Closure closure) :: s') t rest e
+               | _ -> eval [] ("Panic" :: t) [] e)
 
-      | Fun (body) :: rest -> (
-        match s with
-        | Sym x :: s' ->
-            let closure = { cl_name = x; cl_env = e; cl_body = body } in
-            eval (Closure closure :: s') t rest e  (* Push the closure onto the stack *) 
-              | [] ->  eval [] ("Panic" :: t) [] e
-                  (* FunError2: The stack is empty *)
-              | _ -> 
-                eval [] ("Panic" :: t) [] e (* FunError1: x is not a symbol *)
-            )
-      | Return :: rest -> (
-              match s with
-              | Closure { cl_name = _; cl_env = closure_env; cl_body = closure_body } :: return_val :: s' ->
-                  let new_stack = return_val :: s' in  (* The new stack has the return value on top *)
-                  eval new_stack t closure_body closure_env  (* Continue execution with the closure's body and environment *)
-              | _ -> eval [] ("Panic" :: t) [] e (* Handle error cases such as an empty stack or a stack without a closure on top *)
-            )
-         
 
-        (* ... rest of your code ... *)
-        | Call :: rest ->
-          begin
-            match s with
-            | Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: arg :: s' ->
-                (* Extend the closure's environment for recursive calls *)
-                let new_env = mk_clo closure_env closure_env [] [(f_name, arg, closure_body)] in
-                (* Evaluate the closure body with the new environment and argument *)
-                let closure_trace = eval [arg] t closure_body new_env in
-                (* Continue with the rest of the program *)
-                eval s' closure_trace rest e
-            | [] | [_] -> 
-                (* Handle error cases such as an empty stack or a stack with only one element *)
-                eval [] ("Panic" :: t) [] e 
-            | _ -> 
-                (* Handle case where the top of the stack is not a closure *)
-                eval [] ("Panic" :: t) [] e
-          end
-      
-(* ... rest of your code ... *)
+               | Return :: rest -> (
+                match s with
+                | Closure (cl_name, closure_env, closure_body) :: return_val :: s' ->
+                    let new_stack = return_val :: s' in
+                    eval new_stack t closure_body closure_env
+                | _ -> eval [] ("Panic" :: t) [] e
+              )
+            
+
+              | Call :: rest -> (
+                match s with
+                | Closure (f_name, closure_env, closure_body) :: arg :: s' ->
+                    (* Update the environment for the function call *)
+                    let updated_env = (f_name, Closure (f_name, closure_env, closure_body)) :: closure_env in
+                    (* Create a continuation closure with the current environment *)
+                    let cc = ("cc", e, rest) in
+                    (* Execute the closure's body with the new environment *)
+                    let result_trace = eval [Closure cc; arg] t closure_body updated_env in
+                    (* Continue with the rest of the program *)
+                    eval s' result_trace rest e
+                | _ -> eval [] ("Panic" :: t) [] e  (* Handle errors *)
+
+ )
 
          
             
