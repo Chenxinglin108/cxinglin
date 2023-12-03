@@ -56,23 +56,15 @@ let parse_bool =
   let parse_unit =
   keyword "Unit" >> pure Unit
 
-
-  let parse_sy =
+  let str = String.make 1 
+  let parse_sym =
     let parse_char_digit =
       satisfy (fun c -> (c >= 'a' && c <= 'z')  || (c >= '0' && c <= '9'))
     in
     many1' (fun () -> parse_char_digit) >>= fun chars ->
-    pure (Sym (string_concat_list (list_map chars (String.make 1))))
+    pure (Sym (string_concat_list (list_map chars (str))))
 
 
-      let parse_sym =
-        let parse_char_digit =
-          satisfy (fun c -> (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
-        in
-        many1' (fun () -> parse_char_digit) >>= fun chars ->
-        let symbol_name = String.concat "" (List.map (String.make 1) chars) in
-        pure (Sym symbol_name)  (* Wraps the string as a symbol constant *)
-      
   
 let parse_const =
   parse_int <|>
@@ -254,8 +246,8 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
     |IfElse (if_coms, else_coms) :: rest ->
             (match s with
              | Bool b :: s' -> 
-                if b then eval s' t (if_coms @ rest) e (* Execute 'if' block *)
-                else eval s' t (else_coms @ rest) e (* Execute 'else' block *)
+                if b then eval s' t (list_append if_coms rest) e (* Execute 'if' block *)
+                else eval s' t (list_append else_coms rest) e (* Execute 'else' block *)
              | [] -> eval [] ("Panic" :: t) [] e (* IfElseError2: Stack is empty *)
              | _ -> eval [] ("Panic" :: t) [] e) (* IfElseError1: Top of stack is not a boolean *)
     | Fun body :: rest ->
