@@ -353,7 +353,7 @@ let rec compiler (expr: expr) : coms =
   | Fun (f, x, m) -> [Push (Sym f); Push (Sym x); Bind] @ compiler m @ [Swap;Ret] 
   | App (f, arg) -> compiler f @ compiler arg @ [Call]
   | Let (x, m, n) -> compiler m @ [Push (Sym x); Bind ] @ compiler n 
-  | Seq (m1, m2) -> compiler m1 @ compiler m2
+  | Seq (m1, m2) -> compiler m1 @ [Pop]@ compiler m2
   | Ifte (cond, then_branch, else_branch) ->
       compiler cond @ [Ifte (compiler then_branch, compiler else_branch)]
   | Trace m -> compiler m @ [Trace]
@@ -388,9 +388,9 @@ let rec print_com() = function
 and print_coms coms = 
   String.concat "; " (list_map coms (print_com()))
 
-let compile expr =
-  let compiled = compiler expr in
-  print_coms compiled
+  let compile s = 
+
+   print_coms (compiler (parse_prog s))
 
 
-let compiled_code = compile (parse_prog "let hmmm x y = x > y in trace(hmmm 100 101)")
+let compiled_code = compile  ("let hmmm x y = x > y in trace(hmmm 100 101)")
