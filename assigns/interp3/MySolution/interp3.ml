@@ -1,5 +1,5 @@
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
-
+#use "./../../../assigns/interp2/Mysolution/interp2.ml";;
 (*
 
 Please implement the [compile] function following the
@@ -15,6 +15,10 @@ Notes:
 (* ------------------------------------------------------------ *)
 
 (* abstract syntax tree of high-level language *)
+
+
+
+
 let list_map(xs) = foreach_to_map_list(list_foreach)(xs)
 type uopr =
   | Neg | Not
@@ -329,13 +333,40 @@ let parse_prog (s : string) : expr =
   | Some (m, []) -> scope_expr m
   | _ -> raise SyntaxError
 
+
+
+  type const =
+  | Int of int
+  | Bool of bool
+  | Unit
+  | Sym of string
+
+type value =
+  | VInt of int
+  | VBool of bool
+  | VUnit
+  | VSym of string
+  | VClo of string * env * coms
+
+and com =
+  | Push of const | Pop | Swap | Trace
+  | Add | Sub | Mul | Div
+  | And | Or | Not
+  | Lt | Gt
+  | Ifte of coms * coms 
+  | Bind | Lookup
+  | Fun of coms | Call | Ret
+
+and coms = com list
+and env = (string * value) list
+and stack = value list
+and trace = string list 
 (* Compiler function *)
 let rec compiler (expr: expr) : coms =
   match expr with
   | Int i -> [Push (Int i)]
   | Bool b -> [Push (Bool b)]
   | Unit -> [Push Unit]
-
   | UOpr (opr, m) -> compiler m @ compile_unary_op opr
   | BOpr (Add, m1, m2) -> compiler m1 @ compiler m2 @ [Add]
   | BOpr (Sub, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Sub]
@@ -349,8 +380,8 @@ let rec compiler (expr: expr) : coms =
   | BOpr (Lte, m1, m2) -> compiler (UOpr(Not, BOpr(Gt,m1,m2)))
   | BOpr (Gte, m1, m2) -> compiler (UOpr(Not, BOpr(Lt,m1,m2)))
   | BOpr (Eq, m1, m2) -> compiler (BOpr(And, BOpr(Lte,m1,m2),  BOpr(Gte,m1,m2)))
-  | Var x -> [Push (Sym x); Lookup]
-  | Fun (f, x, m) -> [Push (Sym f); Push (Sym x); Bind] @ compiler m @ [Swap;Ret] 
+  | Var x -> [Push (Sym x);Lookup ]
+  | Fun (f, x, m) -> let x = [Push (Sym x); Bind] @ compiler m @ [Swap;Ret] in [Push (Sym f);Fun x]
   | App (f, arg) -> compiler f @ compiler arg @ [Call]
   | Let (x, m, n) -> compiler m @ [Push (Sym x); Bind ] @ compiler n 
   | Seq (m1, m2) -> compiler m1 @ [Pop]@ compiler m2
