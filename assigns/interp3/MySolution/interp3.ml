@@ -383,7 +383,7 @@ let rec print_com() = function
   | Ifte (c1, c2) -> "If " ^ print_coms c1 ^ "else " ^ print_coms c2 ^ "End;"
   | Bind  -> "Bind"
   | Lookup -> "Lookup"
-  | Fun coms -> "Fun " ^ print_coms coms " End;"
+  | Fun coms -> "Fun " ^ print_coms coms ^ " End;"
   | Call -> "Call"
   | Ret -> "Return"
 
