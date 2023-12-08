@@ -1,5 +1,5 @@
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
-
+#use "./../../../assigns/interp2/Mysolution/interp2.ml";;
 (*
 
 Please implement the [compile] function following the
@@ -15,7 +15,7 @@ Notes:
 (* ------------------------------------------------------------ *)
 
 (* abstract syntax tree of high-level language *)
-
+let list_map(xs) = foreach_to_map_list(list_foreach)(xs)
 type uopr =
   | Neg | Not
 
@@ -47,6 +47,7 @@ let chain_left (p : 'a parser) (q : ('a -> 'a -> 'a) parser) : 'a parser =
   let* fms = many (let* f = q in let* m = p in pure (f, m)) in
   let m = list_foldleft fms init (fun acc (f, m) -> f acc m) in
   pure m
+  
 
 let rec chain_right (p : 'a parser) (q : ('a -> 'a -> 'a) parser) : 'a parser =
   let* m = p in
@@ -328,4 +329,68 @@ let parse_prog (s : string) : expr =
   | Some (m, []) -> scope_expr m
   | _ -> raise SyntaxError
 
-let compile (s : string) : string = (* YOUR CODE *)
+(* Compiler function *)
+let rec compiler (expr: expr) : coms =
+  match expr with
+  | Int i -> [Push (Int i)]
+  | Bool b -> [Push (Bool b)]
+  | Unit -> [Push Unit]
+
+  | UOpr (opr, m) -> compiler m @ compile_unary_op opr
+  | BOpr (Add, m1, m2) -> compiler m1 @ compiler m2 @ [Add]
+  | BOpr (Sub, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Sub]
+  | BOpr (Mul, m1, m2) -> compiler m1 @ compiler m2 @ [Mul]
+  | BOpr (Div, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Div]
+  | BOpr (And, m1, m2) -> compiler m1 @ compiler m2 @ [And]
+  | BOpr (Mod, m1, m2) ->compiler (BOpr(Sub,m1,(BOpr(Mod,m2, BOpr(Div,m1,m2)))))
+  | BOpr (Or, m1, m2) -> compiler m1 @ compiler m2 @ [Or]
+  | BOpr (Lt, m1, m2) -> compiler m1 @ compiler m2 @ [Lt]
+  | BOpr (Gt, m1, m2) -> compiler m1 @ compiler m2 @ [Gt]
+  | BOpr (Lte, m1, m2) -> compiler (UOpr(Not, BOpr(Gt,m1,m2)))
+  | BOpr (Gte, m1, m2) -> compiler (UOpr(Not, BOpr(Lt,m1,m2)))
+  | BOpr (Eq, m1, m2) -> compiler (BOpr(And, BOpr(Lte,m1,m2),  BOpr(Gte,m1,m2)))
+  | Var x -> [Push (Sym x); Lookup]
+  | Fun (f, x, m) -> [Push (Sym f); Push (Sym x); Bind] @ compiler m @ [Swap;Ret] 
+  | App (f, arg) -> compiler f @ compiler arg @ [Call]
+  | Let (x, m, n) -> compiler m @ [Push (Sym x); Bind ] @ compiler n 
+  | Seq (m1, m2) -> compiler m1 @ compiler m2
+  | Ifte (cond, then_branch, else_branch) ->
+      compiler cond @ [Ifte (compiler then_branch, compiler else_branch)]
+  | Trace m -> compiler m @ [Trace]
+
+and compile_unary_op = function
+  | Neg -> [Push (Int (-1)); Mul] 
+  | Not ->[Not]
+
+
+
+let rec print_com() = function
+  | Push const -> "Push " ^ toString (value_of_const const)
+  | Pop -> "Pop"
+  | Swap -> "Swap"
+  | Trace -> "Trace"
+  | Add -> "Add"
+  | Sub -> "Sub"
+  | Mul -> "Mul"
+  | Div -> "Div"
+  | And -> "And"
+  | Or -> "Or"
+  | Not -> "Not"
+  | Lt -> "Lt"
+  | Gt -> "Gt"
+  | Ifte (c1, c2) -> "IfElse (" ^ print_coms c1 ^ ", " ^ print_coms c2 ^ ")"
+  | Bind  -> "Bind"
+  | Lookup -> "Lookup"
+  | Fun coms -> "Fun " ^ print_coms coms
+  | Call -> "Call"
+  | Ret -> "Ret"
+
+and print_coms coms = 
+  String.concat "; " (list_map coms (print_com()))
+
+let compile expr =
+  let compiled = compiler expr in
+  print_coms compiled
+
+
+let compiled_code = compile (parse_prog "let hmmm x y = x > y in trace(hmmm 100 101)")

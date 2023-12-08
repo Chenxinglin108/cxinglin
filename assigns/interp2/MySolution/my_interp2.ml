@@ -1,16 +1,29 @@
+#use "./../../../classlib/OCaml/MyOCaml.ml";;
 
+(*
 
-type closure = {
-  cl_name: string;          (* Function name *)
-  cl_env: (string * const) list;  (* Closure environment *)
-  cl_body: prog;            (* Closure body *)
-}
+Please implement the interp function following the
+specifications described in CS320_Fall_2023_Project-1.pdf
+
+Notes:
+1. You are only allowed to use library functions defined in MyOCaml.ml
+   or ones you implement yourself.
+2. You may NOT use OCaml standard library functions directly.
+
+*)
+
+(* abstract syntax tree of interp1 *)
+
+type symbol = string
+type character = char
+
+type closure = string*(string*const)list*prog
 
 and const =
   | Int of int
   | Bool of bool
   | Unit 
-  | Sym of string
+  | Sym of symbol
   | Closure of closure
   
 
@@ -38,19 +51,20 @@ let parse_bool =
   (keyword "True" >> pure (Bool true)) <|>
   (keyword "False" >> pure (Bool false))
 
+
+  let list_map(xs) = foreach_to_map_list(list_foreach)(xs)
   let parse_unit =
   keyword "Unit" >> pure Unit
 
+  let str = String.make 1 
+  let parse_sym =
+    let parse_char_digit =
+      satisfy (fun c -> (c >= 'a' && c <= 'z')  || (c >= '0' && c <= '9'))
+    in
+    many1' (fun () -> parse_char_digit) >>= fun chars ->
+    pure (Sym (string_concat_list (list_map chars (str))))
 
 
-      let parse_sym =
-        let parse_char_digit =
-          satisfy (fun c -> (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
-        in
-        many1' (fun () -> parse_char_digit) >>= fun chars ->
-        let symbol_name = String.concat "" (List.map (String.make 1) chars) in
-        pure (Sym symbol_name)  (* Wraps the string as a symbol constant *)
-      
   
 let parse_const =
   parse_int <|>
@@ -116,25 +130,34 @@ let str_of_int (n : int) : string =
     string_append "-" (str_of_nat (-n))
   else str_of_nat n
 
-let toString (c : const) : string =
-  match c with
-  | Int i -> str_of_int i
-  | Bool true -> "True"
-  | Bool false -> "False"
-  | Unit -> "Unit"
-  | Sym s -> s 
-  | Closure cl -> "Fun<" ^ cl.cl_name ^ ">"
+  let toString (c : const) : string =
+    match c with
+    | Int i -> str_of_int i
+    | Bool true -> "True"
+    | Bool false -> "False"
+    | Unit -> "Unit"
+    | Sym s -> s 
+    | Closure (name, _, _) -> "Fun<" ^ name ^ ">"  (* Adjusted for the new tuple definition *)
+  
+
+  let assoc_opt key lst =
+    list_foldleft lst None (fun acc (k,v) -> if k = key then Some v else acc) 
 
 
-
-
+  
 let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
   match p with
   (* termination state returns the trace *)
   | [] -> t
   | Push c :: p0 (* PushStack *) -> eval (c :: s) t p0 e
 
-
+  (*| Push c :: p0 -> (* PushStack *)
+    let actual_value = match c with
+      | Sym name -> (match List.assoc_opt name e with
+                      | Some value -> value
+                      | None -> c) (* If symbol not in env, push symbol itself *)
+      | _ -> c
+    in eval (actual_value :: s) t p0 e *)
   | Pop :: p0 ->
     (match s with
      | _ :: s0 (* PopStack *) -> eval s0 t p0 e
@@ -204,59 +227,79 @@ let rec eval (s : stack) (t : trace) (p : prog) (e:env) : trace =
        | []                   (* GtError2 *) -> eval [] ("Panic" :: t) [] e
        | _ :: []              (* GtError3 *) -> eval [] ("Panic" :: t) [] e)
 
-    | Bind :: p0 -> 
+    | Bind :: p0 -> (* Handle Bind *)
       (match s with
-        | Sym x :: v :: s0 -> eval s0 t p0 ((x, v) :: e)  
-        | Sym x :: [] -> eval [] ("Panic" :: t) [] e    
-        | [] -> eval [] ("Panic" :: t) [] e              
+        | Sym x :: v :: s0 -> eval s0 t p0 ((x, v) :: e)  (* Successful bind *)
+        | Sym x :: [] -> eval [] ("Panic" :: t) [] e      (* BindError3: Only one element on the stack *)
+        | [] -> eval [] ("Panic" :: t) [] e               (* BindError2: Empty stack *)
         | _ -> eval [] ("Panic" :: t) [] e)  
 
     | Lookup :: p0 ->
       (match s with
         | Sym x :: s0 -> 
-             (match List.assoc_opt x e with
-              | Some v -> eval (v :: s0) t p0 e  
-              | None -> eval [] ("Panic" :: t) [] e)  
-           | [] -> eval [] ("Panic" :: t) [] e  
-           | _ -> eval [] ("Panic" :: t) [] e)  
+             (match assoc_opt x e with
+              | Some v -> eval (v :: s0) t p0 e  (* Successful lookup *)
+              | None -> eval [] ("Panic" :: t) [] e)  (* LookupError3: Symbol not bound *)
+           | [] -> eval [] ("Panic" :: t) [] e  (* LookupError2: Stack is empty *)
+           | _ -> eval [] ("Panic" :: t) [] e)  (* LookupError1: Top of stack is not a symbol *)
 
     |IfElse (if_coms, else_coms) :: rest ->
             (match s with
              | Bool b :: s' -> 
-                if b then eval s' t (if_coms @ rest) e 
-                else eval s' t (else_coms @ rest) e 
-            
-             | _ -> eval [] ("Panic" :: t) [] e) 
+                if b then eval s' t (list_append if_coms rest) e (* Execute 'if' block *)
+                else eval s' t (list_append else_coms rest) e (* Execute 'else' block *)
+             | [] -> eval [] ("Panic" :: t) [] e (* IfElseError2: Stack is empty *)
+             | _ -> eval [] ("Panic" :: t) [] e) (* IfElseError1: Top of stack is not a boolean *)
+    | Fun body :: rest ->
+              (match s with
+               | Sym x :: s' ->
+                   let closure = (x, e, body) in (* closure now matches the new structure *)
+                   eval ((Closure closure) :: s') t rest e
+               | _ -> eval [] ("Panic" :: t) [] e)
 
-      | Fun (body) :: rest -> (
-        match s with
-        | Sym x :: s' ->
-            let closure = { cl_name = x; cl_env = e; cl_body = body } in
-            eval (Closure closure :: s') t rest e  
+
+               | Return :: rest -> (
+                match s with
+                | Closure (cl_name, closure_env, closure_body) :: return_val :: s' ->
+                    let new_stack = return_val :: s' in
+                    eval new_stack t closure_body closure_env
+                | _ -> eval [] ("Panic" :: t) [] e
+              )
             
-                 
-              | _ -> 
-                eval [] ("Panic" :: t) [] e 
-            )
-      | Return :: rest -> (
-              match s with
-              | Closure { cl_name = _; cl_env = closure_env; cl_body = closure_body } :: return_val :: s' ->
-                  let new_stack = return_val :: s' in  
-                  eval new_stack t closure_body closure_env  
-              | _ -> eval [] ("Panic" :: t) [] e)
-            | Call :: rest -> (
-              match s with
-              | Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body } :: arg :: s' ->
-               
-                let new_env = (f_name, Closure { cl_name = f_name; cl_env = closure_env; cl_body = closure_body }) :: closure_env in
-                eval (arg :: s') t closure_body new_env
-              | [] | [_] -> 
-                eval [] ("Panic" :: t) [] e 
-              | _ -> 
-                eval [] ("Panic" :: t) [] e
-            )
+
+          
+                | Call :: rest -> (
+                  match s with
+                  | Closure (f_name, closure_env, closure_body) :: arg :: s' ->
+                      (* Create the new environment with the function mapped to its closure *)
+                      let new_env = (f_name, Closure (f_name, closure_env, closure_body)) :: closure_env in
+                      (* Create the continuation closure with the current environment and the rest of the program *)
+                      let continuation_closure = Closure ("cc", e, rest) in
+                      (* The argument 'a' becomes the top of the stack, followed by the continuation closure *)
+                      let new_stack = arg :: continuation_closure :: s' in
+                      (* Execute the closure's body with the updated environment *)
+                      eval new_stack t closure_body new_env
+                  | _ -> eval [] ("Panic" :: t) [] e  (* Handle error cases *)
+                )
+
+         
             
+     
+              
+         
             
 let initial_env : env = []  (* This would contain any predefined bindings *)
 
-let interp (s : string) : string list option = (*your code*)
+let interp (s : string) : string list option =
+  match string_parse (whitespaces >> parse_coms()) s with
+  | Some (p, []) -> 
+    let initial_stack = [] (* Starting with an empty stack *) in
+    let initial_trace = [] (* Starting with an empty trace *) in
+    let final_trace = eval initial_stack initial_trace p initial_env in
+    Some final_trace (* Return the final trace after evaluation *)
+  | Some (_, _ :: _) -> 
+    None (* Parsing did not consume the entire input, which indicates an error *)
+  | None -> 
+    None (* Parsing failed, likely due to a syntax error in the input program *)
+      
+
