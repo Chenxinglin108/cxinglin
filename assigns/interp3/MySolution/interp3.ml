@@ -18,7 +18,6 @@ Notes:
 
 
 
-
 let list_map(xs) = foreach_to_map_list(list_foreach)(xs)
 type uopr =
   | Neg | Not
@@ -333,36 +332,8 @@ let parse_prog (s : string) : expr =
   | Some (m, []) -> scope_expr m
   | _ -> raise SyntaxError
 
-
-
-  type const =
-  | Int of int
-  | Bool of bool
-  | Unit
-  | Sym of string
-
-type value =
-  | VInt of int
-  | VBool of bool
-  | VUnit
-  | VSym of string
-  | VClo of string * env * coms
-
-and com =
-  | Push of const | Pop | Swap | Trace
-  | Add | Sub | Mul | Div
-  | And | Or | Not
-  | Lt | Gt
-  | Ifte of coms * coms 
-  | Bind | Lookup
-  | Fun of coms | Call | Ret
-
-and coms = com list
-and env = (string * value) list
-and stack = value list
-and trace = string list 
 (* Compiler function *)
-let rec compiler (expr: expr) : coms =
+let rec compiler (expr: expr)  =
   match expr with
   | Int i -> [Push (Int i)]
   | Bool b -> [Push (Bool b)]
