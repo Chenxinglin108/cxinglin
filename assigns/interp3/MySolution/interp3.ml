@@ -1,5 +1,6 @@
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
-#use "./../../assigns/interp2/Mysolution/interp2.ml";;
+#use "./../../interp2/Mysolution/interp2.ml";;
+
 (*
 
 Please implement the [compile] function following the
@@ -19,6 +20,7 @@ Notes:
 
 
 let list_map(xs) = foreach_to_map_list(list_foreach)(xs)
+
 type uopr =
   | Neg | Not
 
@@ -396,3 +398,11 @@ and print_coms coms =
 
 
 let compiled_code = compile  ("let hmmm x y = x > y in trace(hmmm 100 101)")
+let compiled_code1 = interp (compile ("
+let i x = x in 
+let k x y = x in 
+let k1 x y = y in 
+let s x y z = x z (y z) in
+let example = s k i k in 
+let application = example 1 2 in
+trace application"))
