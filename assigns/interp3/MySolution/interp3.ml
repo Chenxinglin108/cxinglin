@@ -380,12 +380,12 @@ let rec print_com() = function
   | Not -> "Not"
   | Lt -> "Lt"
   | Gt -> "Gt"
-  | Ifte (c1, c2) -> "IfElse (" ^ print_coms c1 ^ ", " ^ print_coms c2 ^ ")"
+  | Ifte (c1, c2) -> "If " ^ print_coms c1 ^ "else " ^ print_coms c2 ^ "End;"
   | Bind  -> "Bind"
   | Lookup -> "Lookup"
-  | Fun coms -> "Fun " ^ print_coms coms
+  | Fun coms -> "Fun " ^ print_coms coms " End;"
   | Call -> "Call"
-  | Ret -> "Ret"
+  | Ret -> "Return"
 
 and print_coms coms = 
   String.concat "; " (list_map coms (print_com()))
