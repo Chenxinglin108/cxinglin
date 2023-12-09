@@ -1,5 +1,5 @@
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
-#use "./../../../../assigns/interp2/MySolution/interp2.ml";;
+#use "./../../assigns/interp2/MySolution/interp2.ml";;
 
 
 (*
