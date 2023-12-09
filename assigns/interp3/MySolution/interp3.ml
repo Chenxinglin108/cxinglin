@@ -1,6 +1,7 @@
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
 #use "./../../../assigns/interp2/MySolution/interp2.ml";;
 
+
 (*
 
 Please implement the [compile] function following the
@@ -345,64 +346,80 @@ let rec compiler (expr: expr)  =
   | BOpr (Sub, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Sub]
   | BOpr (Mul, m1, m2) -> compiler m1 @ compiler m2 @ [Mul]
   | BOpr (Div, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Div]
-  | BOpr (And, m1, m2) -> compiler m1 @ compiler m2 @ [And]
+  | BOpr (And, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;And]
   | BOpr (Mod, m1, m2) ->compiler (BOpr(Sub,m1,(BOpr(Mod,m2, BOpr(Div,m1,m2)))))
-  | BOpr (Or, m1, m2) -> compiler m1 @ compiler m2 @ [Or]
-  | BOpr (Lt, m1, m2) -> compiler m1 @ compiler m2 @ [Lt]
-  | BOpr (Gt, m1, m2) -> compiler m1 @ compiler m2 @ [Gt]
-  | BOpr (Lte, m1, m2) -> compiler (UOpr(Not, BOpr(Gt,m1,m2)))
-  | BOpr (Gte, m1, m2) -> compiler (UOpr(Not, BOpr(Lt,m1,m2)))
+  | BOpr (Or, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Or]
+  | BOpr (Lt, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Lt]
+  | BOpr (Gt, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Gt]
+  | BOpr (Lte, m1, m2) -> compiler m2 @ compiler m1 @ [Swap; Gt; Not]  (* Lte as Not of Gt with swapped operands *)
+  | BOpr (Gte, m1, m2) -> compiler m2 @ compiler m1 @ [Swap; Lt; Not]  (* Gte as Not of Lt with swapped operands *)
+  
   | BOpr (Eq, m1, m2) -> compiler (BOpr(And, BOpr(Lte,m1,m2),  BOpr(Gte,m1,m2)))
   | Var x -> [Push (Sym x);Lookup ]
-  | Fun (f, x, m) -> let x = [Push (Sym x); Bind] @ compiler m @ [Swap;Ret] in [Push (Sym f);Fun x]
-  | App (f, arg) -> compiler f @ compiler arg @ [Call]
+  | Fun (f, x, m) -> let x = [Push (Sym x); Bind] @ compiler m @ [Swap;Ret] in [Push (Sym f);Fun x ] 
+  | App (f, arg) -> compiler f @ compiler arg @ [Swap;Call]
   | Let (x, m, n) -> compiler m @ [Push (Sym x); Bind ] @ compiler n 
-  | Seq (m1, m2) -> compiler m1 @ [Pop]@ compiler m2
+  | Seq (m1, m2) -> compiler m1 @ [Pop] @ compiler m2
   | Ifte (cond, then_branch, else_branch) ->
       compiler cond @ [Ifte (compiler then_branch, compiler else_branch)]
   | Trace m -> compiler m @ [Trace]
-
-and compile_unary_op = function
+  and compile_unary_op = function
   | Neg -> [Push (Int (-1)); Mul] 
   | Not ->[Not]
 
 
+  let rec print_commands = function
+  | [] -> ";"
+  | [com] -> print_single_com com  (* No semicolon for the last command *)
+  | com :: coms -> print_single_com com ^ "; " ^ print_commands coms  (* Add semicolon for other commands *)
 
-let rec print_com() = function
-  | Push const -> "Push " ^ toString (value_of_const const)
-  | Pop -> "Pop"
-  | Swap -> "Swap"
-  | Trace -> "Trace"
-  | Add -> "Add"
-  | Sub -> "Sub"
-  | Mul -> "Mul"
-  | Div -> "Div"
-  | And -> "And"
-  | Or -> "Or"
-  | Not -> "Not"
-  | Lt -> "Lt"
-  | Gt -> "Gt"
-  | Ifte (c1, c2) -> "If " ^ print_coms c1 ^ "else " ^ print_coms c2 ^ "End;"
-  | Bind  -> "Bind"
-  | Lookup -> "Lookup"
-  | Fun coms -> "Fun " ^ print_coms coms ^ " End;"
-  | Call -> "Call"
-  | Ret -> "Return"
+  let rec print_commands = function
+  | [] -> ""
+  | com :: coms -> 
+      let com_str = match com with
+        | Push const -> "Push " ^ toString (value_of_const const)
+        | Pop -> "Pop"
+        | Swap -> "Swap"
+        | Trace -> "Trace"
+        | Add -> "Add"
+        | Sub -> "Sub"
+        | Mul -> "Mul"
+        | Div -> "Div"
+        | And -> "And"
+        | Or -> "Or"
+        | Not -> "Not"
+        | Lt -> "Lt"
+        | Gt -> "Gt"
+        | Ifte (c1, c2) -> "If " ^ print_commands c1 ^ " Else " ^ print_commands c2 ^ " End"
+        | Bind -> "Bind"
+        | Lookup -> "Lookup"
+        | Fun coms -> "Fun " ^ print_commands coms ^ " End"
+        | Call -> "Call"
+        | Ret -> "Return"
+      in
+      com_str ^ "; " ^ print_commands coms
 
-and print_coms coms = 
-  String.concat "; " (list_map coms (print_com()))
 
   let compile s = 
 
-   print_coms (compiler (parse_prog s))
+   print_commands (compiler (parse_prog s))
 
 
-let compiled_code = compile  ("let hmmm x y = x > y in trace(hmmm 100 101)")
-let compiled_code1 = interp (compile ("
+
+
+
+
+let compiled_code = (compile  ("let rec simple x =
+  if x > 0 then
+    simple (x - 1)
+  else 100
+in
+trace (simple 10)"))
+(*let compiled_code1 = interp (compile ("
 let i x = x in 
 let k x y = x in 
 let k1 x y = y in 
 let s x y z = x z (y z) in
 let example = s k i k in 
 let application = example 1 2 in
-trace application"))
+trace application"))*)
