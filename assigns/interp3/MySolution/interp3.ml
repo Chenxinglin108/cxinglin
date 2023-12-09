@@ -351,9 +351,8 @@ let rec compiler (expr: expr)  =
   | BOpr (Or, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Or]
   | BOpr (Lt, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Lt]
   | BOpr (Gt, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Gt]
-  | BOpr (Lte, m1, m2) -> compiler m2 @ compiler m1 @ [Swap; Gt; Not]  (* Lte as Not of Gt with swapped operands *)
-  | BOpr (Gte, m1, m2) -> compiler m2 @ compiler m1 @ [Swap; Lt; Not]  (* Gte as Not of Lt with swapped operands *)
-  
+  | BOpr (Lte, m1, m2) -> compiler (UOpr(Not,BOpr(Gt,m1,m2))) @[Swap]
+  | BOpr (Gte, m1, m2) -> compiler(UOpr(Not,BOpr(Lt,m1,m2))) @[Swap]
   
   | BOpr (Eq, m1, m2) -> compiler (BOpr(And, BOpr(Lte,m1,m2),  BOpr(Gte,m1,m2)))
   | Var x -> [Push (Sym x);Lookup ]
