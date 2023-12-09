@@ -1,5 +1,5 @@
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
-#use "./../../assigns/interp2/MySolution/interp2.ml";;
+#use "./../../../assigns/interp2/MySolution/interp2.ml";;
 
 
 (*
@@ -368,10 +368,6 @@ let rec compiler (expr: expr)  =
   | Not ->[Not]
 
 
-  let rec print_commands = function
-  | [] -> ";"
-  | [com] -> print_single_com com  (* No semicolon for the last command *)
-  | com :: coms -> print_single_com com ^ "; " ^ print_commands coms  (* Add semicolon for other commands *)
 
   let rec print_commands = function
   | [] -> ""
