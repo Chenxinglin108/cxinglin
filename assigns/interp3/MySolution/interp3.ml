@@ -347,13 +347,12 @@ let rec compiler (expr: expr)  =
   | BOpr (Mul, m1, m2) -> compiler m1 @ compiler m2 @ [Mul]
   | BOpr (Div, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Div]
   | BOpr (And, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;And]
-  | BOpr (Mod, m1, m2) ->compiler (BOpr(Sub,m1,(BOpr(Mod,m2, BOpr(Div,m1,m2)))))
+  | BOpr (Mod, m1, m2) ->compiler (BOpr(Sub,m1,(BOpr(Mul,m2, BOpr(Div,m1,m2)))))
   | BOpr (Or, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Or]
   | BOpr (Lt, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Lt]
   | BOpr (Gt, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Gt]
   | BOpr (Lte, m1, m2) ->  compiler (UOpr(Not,BOpr(Gt,m1,m2))) 
   | BOpr (Gte, m1, m2) -> compiler(UOpr(Not,BOpr(Lt,m1,m2))) 
-  
   | BOpr (Eq, m1, m2) -> compiler (BOpr(And, BOpr(Lte,m1,m2),  BOpr(Gte,m1,m2)))
   | Var x -> [Push (Sym x);Lookup ]
   | Fun (f, x, m) -> let x = [Push (Sym x); Bind] @ compiler m @ [Swap;Ret] in [Push (Sym f);Fun x ] 
@@ -402,3 +401,15 @@ let rec compiler (expr: expr)  =
 
 
 
+let x = "
+
+let x = 111 in
+let y = 10 in
+let easier = x mod y in
+trace(easier)
+
+
+"
+let s = interp( print_commands (compiler (parse_prog x)))
+
+ 
