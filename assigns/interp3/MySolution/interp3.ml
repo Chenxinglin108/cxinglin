@@ -335,7 +335,7 @@ let parse_prog (s : string) : expr =
   | Some (m, []) -> scope_expr m
   | _ -> raise SyntaxError
 
-
+let (^)=string_append
 let rec compiler (expr: expr)  =
   match expr with
   | Int i -> [Push (Int i)]
