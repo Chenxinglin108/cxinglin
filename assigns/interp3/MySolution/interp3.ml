@@ -335,7 +335,7 @@ let parse_prog (s : string) : expr =
   | Some (m, []) -> scope_expr m
   | _ -> raise SyntaxError
 
-(* Compiler function *)
+
 let rec compiler (expr: expr)  =
   match expr with
   | Int i -> [Push (Int i)]
@@ -351,8 +351,8 @@ let rec compiler (expr: expr)  =
   | BOpr (Or, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Or]
   | BOpr (Lt, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Lt]
   | BOpr (Gt, m1, m2) -> compiler m1 @ compiler m2 @ [Swap;Gt]
-  | BOpr (Lte, m1, m2) -> compiler m2 @ compiler m1 @ [Swap; Gt; Not]  (* Lte as Not of Gt with swapped operands *)
-  | BOpr (Gte, m1, m2) -> compiler m2 @ compiler m1 @ [Swap; Lt; Not]  (* Gte as Not of Lt with swapped operands *)
+  | BOpr (Lte, m1, m2) -> compiler(UOpr(Not,BOpr(Gt,m1,m2)))
+  | BOpr (Gte, m1, m2) -> compiler(UOpr(Not,BOpr(Lt,m1,m2)))
   
   | BOpr (Eq, m1, m2) -> compiler (BOpr(And, BOpr(Lte,m1,m2),  BOpr(Gte,m1,m2)))
   | Var x -> [Push (Sym x);Lookup ]
@@ -402,24 +402,24 @@ let rec compiler (expr: expr)  =
 
   let compile s = 
 
-   print_commands (compiler (parse_prog s))
+   (print_commands (compiler (parse_prog s)))
 
 
 
 
 
 
-let compiled_code = (compile  ("let rec simple x =
-  if x > 0 then
-    simple (x - 1)
-  else 100
+let compiled_code = interp (compile "let lcm a b =
+  let gcd_value = 
+    let rec gcd x y =
+      if x = 0 then y
+      else gcd (y mod x) x
+    in
+    gcd a b
+  in
+  (a * b) / gcd_value
 in
-trace (simple 10)"))
-(*let compiled_code1 = interp (compile ("
-let i x = x in 
-let k x y = x in 
-let k1 x y = y in 
-let s x y z = x z (y z) in
-let example = s k i k in 
-let application = example 1 2 in
-trace application"))*)
+
+trace (lcm 7 1311);
+trace (lcm 7 11);
+trace (lcm 39 91)")
