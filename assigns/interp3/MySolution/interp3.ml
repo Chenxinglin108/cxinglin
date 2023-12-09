@@ -402,24 +402,11 @@ let rec compiler (expr: expr)  =
 
   let compile s = 
 
-   (print_commands (compiler (parse_prog s)))
+   print_commands (compiler (parse_prog s))
 
 
 
 
 
 
-let compiled_code = interp (compile "let lcm a b =
-  let gcd_value = 
-    let rec gcd x y =
-      if x = 0 then y
-      else gcd (y mod x) x
-    in
-    gcd a b
-  in
-  (a * b) / gcd_value
-in
 
-trace (lcm 7 1311);
-trace (lcm 7 11);
-trace (lcm 39 91)")
