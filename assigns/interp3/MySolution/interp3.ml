@@ -401,16 +401,5 @@ let rec compiler (expr: expr)  =
 
 
 
-let x = "
-let i x = x in 
-let k x y = x in 
-let k1 x y = y in 
-let s x y z = x z (y z) in
-let example = k s (i (s k s i)) in
-let application = example (fun x -> x + 1) 0 in
-trace application
-
-"
-let s = interp( print_commands (compiler (parse_prog x)))
 
  
